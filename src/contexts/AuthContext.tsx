@@ -24,6 +24,7 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, role: AppRole, fullName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  resendConfirmationEmail: (email: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -89,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
         fetchProfile(session.user.id).then((profileData) => {
           setProfile(profileData);
@@ -123,19 +124,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error };
       }
 
-      if (data.user) {
-        // Create profile
-        const { error: profileError } = await supabase.from("profiles").insert({
-          user_id: data.user.id,
-          email: email,
-          full_name: fullName,
-          role: role,
-          onboarding_completed: false,
-        });
+      if (data.user && data.user.email_confirmed_at) {
+        // User is immediately confirmed, we need to handle profile creation
+        // Wait a bit for the trigger to potentially create the profile
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-        if (profileError) {
-          console.error("Profile creation error:", profileError);
-          return { error: profileError };
+        // Check if profile exists, if not create it
+        const { data: existingProfile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("user_id", data.user.id)
+          .single();
+
+        if (!existingProfile) {
+          // Create profile manually if trigger didn't work
+          const { error: profileError } = await supabase.from("profiles").insert({
+            user_id: data.user.id,
+            email: email,
+            full_name: fullName,
+            role: role,
+            onboarding_completed: false,
+          });
+
+          if (profileError) {
+            console.error("Profile creation error:", profileError);
+            return { error: profileError };
+          }
+        } else {
+          // Update the existing profile with the correct role
+          const { error: updateError } = await supabase
+            .from("profiles")
+            .update({ role: role, full_name: fullName })
+            .eq("user_id", data.user.id);
+
+          if (updateError) {
+            console.error("Profile update error:", updateError);
+          }
         }
 
         // Create user_role entry
@@ -144,7 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: role,
         });
 
-        if (roleError) {
+        if (roleError && !roleError.message.includes("duplicate key")) {
           console.error("Role creation error:", roleError);
         }
       }
@@ -168,6 +192,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const resendConfirmationEmail = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -184,6 +220,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         signUp,
         signIn,
+        resendConfirmationEmail,
         signOut,
         refreshProfile,
       }}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Eye, EyeOff, GraduationCap, Building2, Users, BookOpen, Shield, Loader2, Mail, Lock, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { GraduationCap, Building2, Users, BookOpen, Shield, Loader2, Mail, Lock, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { z } from "zod";
 
@@ -65,9 +65,37 @@ export function AuthForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, resendConfirmationEmail } = useAuth();
   const navigate = useNavigate();
+
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  const handleResendEmail = async () => {
+    if (resendCooldown > 0) return;
+
+    setIsLoading(true);
+    const { error } = await resendConfirmationEmail(email);
+    setIsLoading(false);
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Confirmation email resent!");
+      setResendCooldown(60);
+      const timer = setInterval(() => {
+        setResendCooldown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+  };
 
   const validateForm = (isSignUp: boolean) => {
     const newErrors: { email?: string; password?: string; name?: string } = {};
@@ -115,7 +143,22 @@ export function AuthForm() {
     const { error } = await signIn(email, password);
 
     if (error) {
-      if (error.message.includes("Invalid login credentials")) {
+      if (error.message.includes("Email not confirmed")) {
+        toast.error(
+          <div className="flex flex-col gap-2">
+            <span>Email not confirmed. Please check your inbox.</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResendEmail}
+              disabled={resendCooldown > 0}
+            >
+              {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend Confirmation Email"}
+            </Button>
+          </div>,
+          { duration: 10000 }
+        );
+      } else if (error.message.includes("Invalid login credentials")) {
         toast.error("Invalid email or password");
       } else {
         toast.error(error.message);
@@ -147,8 +190,8 @@ export function AuthForm() {
       return;
     }
 
-    toast.success("Account created successfully!");
-    navigate("/onboarding");
+    toast.success("Account created successfully! Please check your email to confirm your account.");
+    navigate("/auth"); // Stay on auth page so they can sign in after confirmation
     setIsLoading(false);
   };
 
@@ -195,13 +238,25 @@ export function AuthForm() {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="signin-password"
-                    type="password"
+                    type={showSignInPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={cn("pl-10", errors.password && "border-destructive")}
+                    className={cn("pl-10 pr-10", errors.password && "border-destructive")}
                     disabled={isLoading}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowSignInPassword(!showSignInPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    disabled={isLoading}
+                  >
+                    {showSignInPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
                 {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
               </div>
@@ -297,13 +352,25 @@ export function AuthForm() {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="signup-password"
-                    type="password"
+                    type={showSignUpPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={cn("pl-10", errors.password && "border-destructive")}
+                    className={cn("pl-10 pr-10", errors.password && "border-destructive")}
                     disabled={isLoading}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    disabled={isLoading}
+                  >
+                    {showSignUpPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
                 {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
               </div>
