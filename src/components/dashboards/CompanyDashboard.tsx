@@ -1,10 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Briefcase, 
-  Users, 
-  Calendar, 
+import {
+  Briefcase,
+  Users,
+  Calendar,
   TrendingUp,
   ChevronRight,
   Plus,
@@ -15,6 +15,9 @@ import {
   Star
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, ShieldAlert, ShieldCheck } from "lucide-react";
 
 const stats = [
   { label: "Active Listings", value: "8", change: "3 pending review", icon: Briefcase, color: "text-company" },
@@ -44,8 +47,41 @@ const upcomingInterviews = [
 ];
 
 export function CompanyDashboard() {
+  const { profile } = useAuth();
+  const isVerified = profile?.company_status === "verified";
+  const isPending = profile?.company_status === "pending";
+  const isRejected = profile?.company_status === "rejected";
+
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Verification Status Banner */}
+      {isPending && (
+        <Alert variant="default" className="border-amber-200 bg-amber-50 text-amber-800">
+          <AlertCircle className="h-4 w-4 text-amber-600" />
+          <AlertTitle>Verification Pending</AlertTitle>
+          <AlertDescription>
+            Your account is currently under review. Once verified, you will be able to post internships and manage applications.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {isRejected && (
+        <Alert variant="destructive">
+          <ShieldAlert className="h-4 w-4" />
+          <AlertTitle>Verification Rejected</AlertTitle>
+          <AlertDescription>
+            Your account verification has been rejected. Please contact the administrator for more information.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {isVerified && (
+        <div className="flex items-center gap-2 text-sm text-green-600 font-medium mb-2">
+          <ShieldCheck className="h-4 w-4" />
+          Verified Employer
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -54,7 +90,11 @@ export function CompanyDashboard() {
             Manage your internship listings and track candidates
           </p>
         </div>
-        <Button className="bg-gradient-company text-white hover:opacity-90">
+        <Button
+          className="bg-gradient-company text-white hover:opacity-90"
+          disabled={!isVerified}
+          title={!isVerified ? "Verification required to post internships" : ""}
+        >
           <Plus className="mr-2 h-4 w-4" />
           Post New Internship
         </Button>

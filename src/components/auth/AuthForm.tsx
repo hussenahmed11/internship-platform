@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, EyeOff, GraduationCap, Building2, Users, BookOpen, Shield, Loader2, Mail, Lock, User } from "lucide-react";
+import { Eye, EyeOff, GraduationCap, Loader2, Mail, Lock, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -15,60 +15,23 @@ const emailSchema = z.string().email("Please enter a valid email address");
 const passwordSchema = z.string().min(8, "Password must be at least 8 characters");
 const nameSchema = z.string().min(2, "Name must be at least 2 characters");
 
-interface RoleOption {
-  value: AppRole;
-  label: string;
-  description: string;
-  icon: React.ElementType;
-  colorClass: string;
-  bgClass: string;
-}
-
-const roleOptions: RoleOption[] = [
-  {
-    value: "student",
-    label: "Student",
-    description: "Find internships and track applications",
-    icon: GraduationCap,
-    colorClass: "text-student",
-    bgClass: "bg-student-light border-student",
-  },
-  {
-    value: "company",
-    label: "Employer",
-    description: "Post internships and find talent",
-    icon: Building2,
-    colorClass: "text-company",
-    bgClass: "bg-company-light border-company",
-  },
-  {
-    value: "advisor",
-    label: "Academic Advisor",
-    description: "Guide students through placements",
-    icon: BookOpen,
-    colorClass: "text-advisor",
-    bgClass: "bg-advisor-light border-advisor",
-  },
-  {
-    value: "coordinator",
-    label: "Coordinator",
-    description: "Manage department placements",
-    icon: Users,
-    colorClass: "text-coordinator",
-    bgClass: "bg-coordinator-light border-coordinator",
-  },
-];
+// University email validation
+const universityEmailSchema = z.string()
+  .email("Please enter a valid email address")
+  .refine(
+    (email) => email.endsWith("@haramayauniversity.edu.et"),
+    "Only @haramayauniversity.edu.et email addresses can register. Staff accounts are created by administrators."
+  );
 
 export function AuthForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<AppRole | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [showSignInPassword, setShowSignInPassword] = useState(false);
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
-  const { signIn, signUp, resendConfirmationEmail } = useAuth();
+  const { signIn, signUp, signInWithGoogle, signInWithLinkedIn, resendConfirmationEmail } = useAuth();
   const navigate = useNavigate();
 
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -100,11 +63,23 @@ export function AuthForm() {
   const validateForm = (isSignUp: boolean) => {
     const newErrors: { email?: string; password?: string; name?: string } = {};
 
-    try {
-      emailSchema.parse(email);
-    } catch (e) {
-      if (e instanceof z.ZodError) {
-        newErrors.email = e.errors[0].message;
+    if (isSignUp) {
+      // For signup, validate university email
+      try {
+        universityEmailSchema.parse(email);
+      } catch (e) {
+        if (e instanceof z.ZodError) {
+          newErrors.email = e.errors[0].message;
+        }
+      }
+    } else {
+      // For signin, just validate email format
+      try {
+        emailSchema.parse(email);
+      } catch (e) {
+        if (e instanceof z.ZodError) {
+          newErrors.email = e.errors[0].message;
+        }
       }
     }
 
@@ -123,11 +98,6 @@ export function AuthForm() {
         if (e instanceof z.ZodError) {
           newErrors.name = e.errors[0].message;
         }
-      }
-
-      if (!selectedRole) {
-        toast.error("Please select a role to continue");
-        return false;
       }
     }
 
@@ -175,10 +145,9 @@ export function AuthForm() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm(true)) return;
-    if (!selectedRole) return;
 
     setIsLoading(true);
-    const { error } = await signUp(email, password, selectedRole, fullName);
+    const { error } = await signUp(email, password, fullName);
 
     if (error) {
       if (error.message.includes("already registered")) {
@@ -193,6 +162,15 @@ export function AuthForm() {
     toast.success("Account created successfully! Please check your email to confirm your account.");
     navigate("/auth"); // Stay on auth page so they can sign in after confirmation
     setIsLoading(false);
+  };
+
+  const handleSocialAuth = async (provider: 'google' | 'linkedin') => {
+    setIsLoading(true);
+    const { error } = provider === 'google' ? await signInWithGoogle() : await signInWithLinkedIn();
+    if (error) {
+      toast.error(error.message);
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -214,6 +192,36 @@ export function AuthForm() {
           </TabsList>
 
           <TabsContent value="signin" className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <Button
+                variant="outline"
+                onClick={() => handleSocialAuth('google')}
+                disabled={isLoading}
+                className="w-full"
+              >
+                <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path></svg>
+                Google
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleSocialAuth('linkedin')}
+                disabled={isLoading}
+                className="w-full"
+              >
+                <svg className="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M100.28 448H7.4V148.9h92.88zM53.79 108.1C24.09 108.1 0 83.5 0 53.8a53.79 53.79 0 0 1 107.58 0c0 29.7-24.1 54.3-53.79 54.3zM447.9 448h-92.68V302.4c0-34.7-.7-79.2-48.29-79.2-48.29 0-55.69 37.7-55.69 76.7V448h-92.78V148.9h89.08v40.8h1.3c12.4-23.5 42.69-48.3 87.88-48.3 94 0 111.28 61.9 111.28 142.3V448z" /></svg>
+                LinkedIn
+              </Button>
+            </div>
+
+            <div className="relative mb-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+              </div>
+            </div>
+
             <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="signin-email">Email</Label>
@@ -276,41 +284,6 @@ export function AuthForm() {
 
           <TabsContent value="signup" className="space-y-4">
             <form onSubmit={handleSignUp} className="space-y-4">
-              {/* Role Selection */}
-              <div className="space-y-3">
-                <Label>Select your role</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  {roleOptions.map((role) => {
-                    const Icon = role.icon;
-                    const isSelected = selectedRole === role.value;
-                    return (
-                      <button
-                        key={role.value}
-                        type="button"
-                        onClick={() => setSelectedRole(role.value)}
-                        className={cn(
-                          "relative flex flex-col items-center p-4 rounded-lg border-2 transition-all duration-200",
-                          "hover:scale-[1.02] hover:shadow-md",
-                          isSelected
-                            ? `${role.bgClass} border-current ${role.colorClass}`
-                            : "bg-card border-border hover:border-muted-foreground/50"
-                        )}
-                      >
-                        <Icon className={cn("h-6 w-6 mb-2", isSelected ? role.colorClass : "text-muted-foreground")} />
-                        <span className={cn("font-medium text-sm", isSelected ? role.colorClass : "text-foreground")}>
-                          {role.label}
-                        </span>
-                        <span className="text-xs text-muted-foreground text-center mt-1 leading-tight">
-                          {role.description}
-                        </span>
-                        {isSelected && (
-                          <div className={cn("absolute top-2 right-2 h-2 w-2 rounded-full", role.colorClass.replace("text-", "bg-"))} />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="signup-name">Full Name</Label>
@@ -330,13 +303,13 @@ export function AuthForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
+                <Label htmlFor="signup-email">University Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="signup-email"
                     type="email"
-                    placeholder="name@university.edu"
+                    placeholder="student@haramayauniversity.edu.et"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className={cn("pl-10", errors.email && "border-destructive")}
@@ -375,14 +348,14 @@ export function AuthForm() {
                 {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
               </div>
 
-              <Button type="submit" className="w-full" size="lg" disabled={isLoading || !selectedRole}>
+              <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Creating account...
                   </>
                 ) : (
-                  "Create Account"
+                  "Create Student Account"
                 )}
               </Button>
             </form>

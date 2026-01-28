@@ -71,6 +71,9 @@ export default function Users() {
                     *,
                     departments (
                         name
+                    ),
+                    companies (
+                        status
                     )
                 `)
                 .order("created_at", { ascending: false });
@@ -210,8 +213,24 @@ export default function Users() {
             case "advisor": return <Badge className="bg-advisor text-white">Advisor</Badge>;
             case "company": return <Badge className="bg-company text-white">Company</Badge>;
             case "student": return <Badge className="bg-student text-white">Student</Badge>;
+            case "verified_company": return <Badge className="bg-company text-white">Verified Company</Badge>;
+            case "pending_company": return <Badge className="bg-amber-500 text-white">Pending Company</Badge>;
+            case "rejected_company": return <Badge variant="destructive">Rejected Company</Badge>;
             default: return <Badge variant="secondary">{role}</Badge>;
         }
+    };
+
+    const getStatusBadge = (user: any) => {
+        if (user.role === "company") {
+            // This would ideally come from the companies table join
+            // For now, we'll use a badge for the general onboarding/role
+            return getRoleBadge(user.role);
+        }
+        return (
+            <Badge variant={user.onboarding_completed ? "default" : "secondary"}>
+                {user.onboarding_completed ? "Active" : "Pending"}
+            </Badge>
+        );
     };
 
     const handleInviteUser = () => {
@@ -584,9 +603,18 @@ export default function Users() {
                                                     </span>
                                                 </td>
                                                 <td className="py-3 px-4">
-                                                    <Badge variant={usr.onboarding_completed ? "default" : "secondary"}>
-                                                        {usr.onboarding_completed ? "Active" : "Pending"}
-                                                    </Badge>
+                                                    {usr.role === 'company' && (usr as any).companies ? (
+                                                        <Badge
+                                                            variant={(usr as any).companies.status === 'verified' ? 'default' : (usr as any).companies.status === 'pending' ? 'outline' : 'destructive'}
+                                                            className={(usr as any).companies.status === 'verified' ? 'bg-company' : (usr as any).companies.status === 'pending' ? 'border-amber-500 text-amber-600' : ''}
+                                                        >
+                                                            {(usr as any).companies.status === 'verified' ? 'Verified' : (usr as any).companies.status === 'pending' ? 'Pending' : 'Rejected'}
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge variant={usr.onboarding_completed ? "default" : "secondary"}>
+                                                            {usr.onboarding_completed ? "Active" : "Pending"}
+                                                        </Badge>
+                                                    )}
                                                 </td>
                                                 <td className="py-3 px-4 text-sm text-muted-foreground">
                                                     {new Date(usr.created_at).toLocaleDateString()}
@@ -605,6 +633,26 @@ export default function Users() {
                                                                 <Edit className="mr-2 h-4 w-4" />
                                                                 Edit User
                                                             </DropdownMenuItem>
+                                                            {usr.role === "company" && (
+                                                                <DropdownMenuItem onClick={() => {
+                                                                    const companyId = (usr as any).companies?.id;
+                                                                    toast.promise(
+                                                                        (async () => {
+                                                                            const { error } = await supabase.from('companies').update({ status: 'verified', verified: true }).eq('profile_id', usr.id);
+                                                                            if (error) throw error;
+                                                                        })(),
+                                                                        {
+                                                                            loading: 'Verifying company...',
+                                                                            success: 'Company verified successfully!',
+                                                                            error: 'Failed to verify company'
+                                                                        }
+                                                                    );
+                                                                    queryClient.invalidateQueries({ queryKey: ["users"] });
+                                                                }}>
+                                                                    <UserCheck className="mr-2 h-4 w-4 text-company" />
+                                                                    Verify Company
+                                                                </DropdownMenuItem>
+                                                            )}
                                                             <DropdownMenuItem>
                                                                 <Mail className="mr-2 h-4 w-4" />
                                                                 Send Message

@@ -105,10 +105,27 @@ export function useAdminDashboardData() {
                     })));
                 }
 
-                // Sort activities by time and limit to 5
+                // Recent activity from companies needing verification
+                const { data: pendingCompanies, error: pendingError } = await supabase
+                    .from("companies")
+                    .select("id, company_name, created_at")
+                    .eq("status", "pending")
+                    .limit(3);
+
+                if (!pendingError && pendingCompanies) {
+                    activities.push(...pendingCompanies.map(company => ({
+                        action: "Company verification requested",
+                        details: `${company.company_name} is pending approval`,
+                        time: new Date(company.created_at).toLocaleDateString(),
+                        type: "warning" as const,
+                        id: company.id
+                    })));
+                }
+
+                // Sort activities by time and limit to 8
                 const sortedActivity = activities
                     .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-                    .slice(0, 5);
+                    .slice(0, 8);
 
                 // 6. Department Statistics with real data
                 const { data: departments, error: deptStatsError } = await supabase
@@ -165,8 +182,10 @@ export function useAdminDashboardData() {
                         acceptedApplications,
                         roleStats,
                         internshipStats,
-                        applicationStats
+                        applicationStats,
+                        pendingVerifications: pendingCompanies?.length || 0
                     },
+                    pendingCompanies: pendingCompanies || [],
                     activity: sortedActivity.length > 0 ? sortedActivity : [{
                         action: "System initialized",
                         details: "No recent activity to display",

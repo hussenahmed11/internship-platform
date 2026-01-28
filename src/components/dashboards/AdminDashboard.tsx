@@ -15,11 +15,13 @@ import {
   Database,
   FileText,
   ClipboardList,
-  RefreshCw
+  RefreshCw,
+  UserPlus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import { StaffAccountCreation } from "@/components/admin/StaffAccountCreation";
 
 import { useAdminDashboardData } from "@/hooks/useAdminDashboardData";
 import { useSystemHealth } from "@/hooks/useSystemHealth";
@@ -37,39 +39,39 @@ export function AdminDashboard() {
   };
 
   const quickActions = [
-    { 
-      label: "Manage Departments", 
-      icon: Building2, 
+    {
+      label: "Manage Departments",
+      icon: Building2,
       onClick: () => navigate("/departments"),
       description: "Add, edit, or remove departments"
     },
-    { 
-      label: "User Management", 
-      icon: Users, 
+    {
+      label: "User Management",
+      icon: Users,
       onClick: () => navigate("/users"),
       description: "Manage all system users"
     },
-    { 
-      label: "System Settings", 
-      icon: Settings, 
+    {
+      label: "System Settings",
+      icon: Settings,
       onClick: () => navigate("/admin/settings"),
       description: "Configure system settings"
     },
-    { 
-      label: "View Analytics", 
-      icon: BarChart3, 
+    {
+      label: "View Analytics",
+      icon: BarChart3,
       onClick: () => navigate("/analytics"),
       description: "Detailed system analytics"
     },
-    { 
-      label: "All Internships", 
-      icon: Briefcase, 
+    {
+      label: "All Internships",
+      icon: Briefcase,
       onClick: () => navigate("/internships"),
       description: "Manage internship listings"
     },
-    { 
-      label: "System Reports", 
-      icon: FileText, 
+    {
+      label: "System Reports",
+      icon: FileText,
       onClick: () => navigate("/reports"),
       description: "Generate system reports"
     },
@@ -80,8 +82,8 @@ export function AdminDashboard() {
       <div className="p-8 text-center bg-red-50 rounded-lg border border-red-200">
         <h2 className="text-xl font-bold text-red-600">Error loading dashboard</h2>
         <p className="text-red-500 mt-2">Could not fetch system statistics. Please try again later.</p>
-        <Button 
-          onClick={() => window.location.reload()} 
+        <Button
+          onClick={() => window.location.reload()}
           className="mt-4"
           variant="outline"
         >
@@ -92,39 +94,46 @@ export function AdminDashboard() {
   }
 
   const stats = [
-    { 
-      label: "Total Users", 
-      value: isLoading ? "..." : data?.stats.users.toLocaleString(), 
-      change: `${data?.stats.roleStats?.student || 0} students, ${data?.stats.roleStats?.company || 0} companies`, 
-      icon: Users, 
-      color: "text-student" 
+    {
+      label: "Total Users",
+      value: isLoading ? "..." : data?.stats.users.toLocaleString(),
+      change: `${data?.stats.roleStats?.student || 0} students, ${data?.stats.roleStats?.company || 0} companies`,
+      icon: Users,
+      color: "text-student"
     },
-    { 
-      label: "Departments", 
-      value: isLoading ? "..." : data?.stats.departments.toLocaleString(), 
-      change: "Active departments", 
-      icon: Building2, 
-      color: "text-coordinator" 
+    {
+      label: "Departments",
+      value: isLoading ? "..." : data?.stats.departments.toLocaleString(),
+      change: "Active departments",
+      icon: Building2,
+      color: "text-coordinator"
     },
-    { 
-      label: "Active Internships", 
-      value: isLoading ? "..." : data?.stats.internships.toLocaleString(), 
-      change: `${data?.stats.internshipStats?.draft || 0} drafts, ${data?.stats.internshipStats?.closed || 0} closed`, 
-      icon: Briefcase, 
-      color: "text-company" 
+    {
+      label: "Active Internships",
+      value: isLoading ? "..." : data?.stats.internships.toLocaleString(),
+      change: `${data?.stats.internshipStats?.draft || 0} drafts, ${data?.stats.internshipStats?.closed || 0} closed`,
+      icon: Briefcase,
+      color: "text-company"
     },
-    { 
-      label: "Applications", 
-      value: isLoading ? "..." : data?.stats.applications.toLocaleString(), 
-      change: `${data?.stats.acceptedApplications || 0} accepted`, 
-      icon: ClipboardList, 
-      color: "text-advisor" 
+    {
+      label: "Applications",
+      value: isLoading ? "..." : (data as any)?.stats.applications.toLocaleString(),
+      change: `${(data as any)?.stats.acceptedApplications || 0} accepted`,
+      icon: ClipboardList,
+      color: "text-advisor"
+    },
+    {
+      label: "Pending Verifications",
+      value: isLoading ? "..." : (data as any)?.stats.pendingVerifications.toLocaleString(),
+      change: "Companies awaiting review",
+      icon: Shield,
+      color: "text-amber-500"
     },
   ];
 
   const recentActivity = data?.activity || [];
   const departmentStats = data?.departmentStats || [];
-  
+
   // Use real system health data
   const systemHealth = healthData ? [
     { name: "Database", ...healthData.database },
@@ -144,7 +153,7 @@ export function AdminDashboard() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button 
+          <Button
             variant="outline"
             onClick={handleRefresh}
             disabled={isLoading || healthLoading}
@@ -152,14 +161,14 @@ export function AdminDashboard() {
             <RefreshCw className={cn("mr-2 h-4 w-4", (isLoading || healthLoading) && "animate-spin")} />
             Refresh
           </Button>
-          <Button 
+          <Button
             variant="outline"
             onClick={() => navigate("/analytics")}
           >
             <BarChart3 className="mr-2 h-4 w-4" />
             Analytics
           </Button>
-          <Button 
+          <Button
             className="bg-gradient-admin text-white hover:opacity-90"
             onClick={() => navigate("/admin/settings")}
           >
@@ -226,6 +235,62 @@ export function AdminDashboard() {
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-3">
+        {/* Staff Account Creation */}
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-admin" />
+              Staff Management
+            </CardTitle>
+            <CardDescription>Create accounts for staff members</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <StaffAccountCreation onAccountCreated={handleRefresh} />
+          </CardContent>
+        </Card>
+
+        {/* Pending Verifications */}
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-amber-500" />
+                Pending Review
+              </CardTitle>
+              <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+                {(data as any)?.pendingCompanies?.length || 0}
+              </Badge>
+            </div>
+            <CardDescription>Employers waiting for verification</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {isLoading ? (
+                [...Array(3)].map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))
+              ) : (data as any)?.pendingCompanies?.length > 0 ? (
+                (data as any).pendingCompanies.map((company: any) => (
+                  <div key={company.id} className="flex items-center justify-between p-3 rounded-lg border bg-amber-50/50 border-amber-100">
+                    <div className="flex-1 min-w-0 pr-2">
+                      <p className="font-medium text-sm truncate">{company.company_name}</p>
+                      <p className="text-xs text-muted-foreground">{new Date(company.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <Button size="sm" variant="outline" className="h-8 border-amber-200 hover:bg-amber-100 text-amber-700 font-medium" onClick={() => navigate("/users?role=company")}>
+                      Review
+                    </Button>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-6 text-muted-foreground">
+                  <CheckCircle2 className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                  <p className="text-sm">All clear! No pending requests.</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* System Health */}
         <Card>
           <CardHeader>
@@ -269,11 +334,11 @@ export function AdminDashboard() {
                     <Badge
                       variant={service.status === "healthy" ? "default" : "secondary"}
                       className={
-                        service.status === "healthy" 
-                          ? "bg-company" 
+                        service.status === "healthy"
+                          ? "bg-company"
                           : service.status === "error"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-amber-100 text-amber-800"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-amber-100 text-amber-800"
                       }
                     >
                       {service.uptime}
@@ -284,9 +349,11 @@ export function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
+      </div>
 
+      <div className="grid gap-6 lg:grid-cols-2">
         {/* Recent Activity */}
-        <Card className="lg:col-span-2">
+        <Card>
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
             <CardDescription>System events and changes</CardDescription>

@@ -13,47 +13,30 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth");
+    if (!loading && profile) {
+      const roleMap: Record<string, string> = {
+        student: "student",
+        employee: "employee",
+        advisor: "advisor",
+        coordinator: "coordinator",
+        super_admin: "admin"
+      };
+      const path = roleMap[profile.role] || "student";
+      navigate(`/dashboard/${path}`, { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [profile, loading, navigate]);
 
-  if (loading) {
+  if (loading || !profile) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-full">
-          <div className="animate-pulse text-muted-foreground">Loading...</div>
+          <div className="animate-pulse text-muted-foreground">
+            {loading ? "Loading..." : "Redirecting..."}
+          </div>
         </div>
       </DashboardLayout>
     );
   }
 
-  if (!profile) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-full">
-          <div className="text-muted-foreground">Loading profile...</div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  const renderDashboard = () => {
-    switch (profile.role) {
-      case "student":
-        return <StudentDashboard />;
-      case "company":
-        return <CompanyDashboard />;
-      case "advisor":
-        return <AdvisorDashboard />;
-      case "coordinator":
-        return <CoordinatorDashboard />;
-      case "admin":
-        return <AdminDashboard />;
-      default:
-        return <StudentDashboard />;
-    }
-  };
-
-  return <DashboardLayout>{renderDashboard()}</DashboardLayout>;
+  return null;
 }

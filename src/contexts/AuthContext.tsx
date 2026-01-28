@@ -3,7 +3,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
-export type AppRole = "student" | "company" | "advisor" | "coordinator" | "admin";
+export type AppRole = "student" | "employee" | "advisor" | "coordinator" | "super_admin";
 
 interface Profile {
   id: string;
@@ -15,6 +15,7 @@ interface Profile {
   role: AppRole;
   department_id: string | null;
   onboarding_completed: boolean;
+  company_status?: "pending" | "verified" | "rejected";
 }
 
 interface AuthContextType {
@@ -22,8 +23,10 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
-  signUp: (email: string, password: string, role: AppRole, fullName: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signInWithGoogle: () => Promise<{ error: Error | null }>;
+  signInWithLinkedIn: () => Promise<{ error: Error | null }>;
   resendConfirmationEmail: (email: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -50,7 +53,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return null;
       }
 
-      return data as Profile;
+      const profile = data as Profile;
+
+      if (profile.role === "employee") {
+        const { data: companyData } = await supabase
+          .from("companies")
+          .select("status")
+          .eq("profile_id", profile.id)
+          .single();
+
+        if (companyData) {
+          profile.company_status = companyData.status as "pending" | "verified" | "rejected";
+        }
+      }
+
+      return profile;
     } catch (error) {
       console.error("Error fetching profile:", error);
       return null;
@@ -104,8 +121,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, role: AppRole, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string) => {
     try {
+      // Validate email domain before attempting signup
+      const emailDomain = email.split('@')[1];
+      if (emailDomain !== 'haramayauniversity.edu.et') {
+        return { 
+          error: new Error('Self-registration is only allowed for @haramayauniversity.edu.et email addresses. Staff and admin accounts must be created by a Super Admin.') 
+        };
+      }
+
       const redirectUrl = `${window.location.origin}/`;
 
       const { data, error } = await supabase.auth.signUp({
@@ -115,62 +140,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName,
-            role: role,
           },
         },
       });
 
       if (error) {
         return { error };
-      }
-
-      if (data.user && data.user.email_confirmed_at) {
-        // User is immediately confirmed, we need to handle profile creation
-        // Wait a bit for the trigger to potentially create the profile
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Check if profile exists, if not create it
-        const { data: existingProfile } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("user_id", data.user.id)
-          .single();
-
-        if (!existingProfile) {
-          // Create profile manually if trigger didn't work
-          const { error: profileError } = await supabase.from("profiles").insert({
-            user_id: data.user.id,
-            email: email,
-            full_name: fullName,
-            role: role,
-            onboarding_completed: false,
-          });
-
-          if (profileError) {
-            console.error("Profile creation error:", profileError);
-            return { error: profileError };
-          }
-        } else {
-          // Update the existing profile with the correct role
-          const { error: updateError } = await supabase
-            .from("profiles")
-            .update({ role: role, full_name: fullName })
-            .eq("user_id", data.user.id);
-
-          if (updateError) {
-            console.error("Profile update error:", updateError);
-          }
-        }
-
-        // Create user_role entry
-        const { error: roleError } = await supabase.from("user_roles").insert({
-          user_id: data.user.id,
-          role: role,
-        });
-
-        if (roleError && !roleError.message.includes("duplicate key")) {
-          console.error("Role creation error:", roleError);
-        }
       }
 
       return { error: null };
@@ -186,6 +161,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
       });
 
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  const signInWithLinkedIn = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "linkedin_oidc",
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
       return { error };
     } catch (error) {
       return { error: error as Error };
@@ -220,6 +223,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         signUp,
         signIn,
+        signInWithGoogle,
+        signInWithLinkedIn,
         resendConfirmationEmail,
         signOut,
         refreshProfile,

@@ -16,6 +16,12 @@ import AdminSettings from "./pages/AdminSettings";
 import Help from "./pages/Help";
 import FeaturePlaceholder from "./pages/FeaturePlaceholder";
 import NotFound from "./pages/NotFound";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { StudentDashboard } from "@/components/dashboards/StudentDashboard";
+import { CompanyDashboard } from "@/components/dashboards/CompanyDashboard";
+import { AdvisorDashboard } from "@/components/dashboards/AdvisorDashboard";
+import { CoordinatorDashboard } from "@/components/dashboards/CoordinatorDashboard";
+import { AdminDashboard } from "@/components/dashboards/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +36,11 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/student" element={<DashboardLayout><StudentDashboard /></DashboardLayout>} />
+            <Route path="/dashboard/employee" element={<DashboardLayout><CompanyDashboard /></DashboardLayout>} />
+            <Route path="/dashboard/advisor" element={<DashboardLayout><AdvisorDashboard /></DashboardLayout>} />
+            <Route path="/dashboard/coordinator" element={<DashboardLayout><CoordinatorDashboard /></DashboardLayout>} />
+            <Route path="/dashboard/admin" element={<DashboardLayout><AdminDashboard /></DashboardLayout>} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/departments" element={<Departments />} />
             <Route path="/users" element={<Users />} />

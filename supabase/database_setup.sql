@@ -3,6 +3,7 @@
 
 -- 1. ENUMS
 CREATE TYPE public.app_role AS ENUM ('student', 'company', 'advisor', 'coordinator', 'admin');
+CREATE TYPE public.employer_status AS ENUM ('pending', 'verified', 'rejected');
 CREATE TYPE public.application_status AS ENUM ('applied', 'interview', 'waiting', 'accepted', 'rejected');
 CREATE TYPE public.internship_status AS ENUM ('draft', 'active', 'closed', 'filled');
 
@@ -67,6 +68,7 @@ CREATE TABLE IF NOT EXISTS public.companies (
     description TEXT,
     location TEXT,
     verified BOOLEAN DEFAULT false,
+    status public.employer_status NOT NULL DEFAULT 'pending',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
 );
@@ -245,12 +247,52 @@ CREATE TRIGGER update_departments_updated_at BEFORE UPDATE ON public.departments
 DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
--- New: Auto-create profile on signup
+-- New: Auto-create profile on signup with automatic role assignment
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+    assigned_role public.app_role;
+    email_domain TEXT;
 BEGIN
-    INSERT INTO public.profiles (user_id, email, full_name, avatar_url)
-    VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'avatar_url');
+    -- Extract domain from email
+    email_domain := split_part(NEW.email, '@', 2);
+    
+    -- Automatic Role Logic
+    IF email_domain = 'university.edu' THEN
+        assigned_role := 'student';
+    ELSE
+        assigned_role := 'company';
+    END IF;
+
+    -- Create Profile
+    INSERT INTO public.profiles (user_id, email, full_name, avatar_url, role)
+    VALUES (
+        NEW.id, 
+        NEW.email, 
+        COALESCE(NEW.raw_user_meta_data->>'full_name', ''), 
+        NEW.raw_user_meta_data->>'avatar_url',
+        assigned_role
+    );
+
+    -- Create entry in user_roles
+    INSERT INTO public.user_roles (user_id, role)
+    VALUES (NEW.id, assigned_role);
+
+    -- If employer, create company record with pending/verified status
+    IF assigned_role = 'company' THEN
+        -- Check for domain-based auto-verification
+        -- For now, if domain is not a generic public one, we mark as pending
+        -- In a real scenario, you might check against a list of known university partners or verified businesses
+        INSERT INTO public.companies (profile_id, company_name, website, status, verified)
+        VALUES (
+            (SELECT id FROM public.profiles WHERE user_id = NEW.id),
+            COALESCE(NEW.raw_user_meta_data->>'company_name', 'My Company'),
+            'https://' || email_domain,
+            'pending',
+            false
+        );
+    END IF;
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -303,7 +345,13 @@ CREATE POLICY "Companies can manage their own record" ON public.companies FOR AL
 CREATE POLICY "Everyone can view verified companies" ON public.companies FOR SELECT USING (verified = true);
 
 -- Internships
-CREATE POLICY "Companies can manage their own internships" ON public.internships FOR ALL USING (company_id IN (SELECT id FROM public.companies WHERE profile_id = public.get_user_profile_id(auth.uid())));
+CREATE POLICY "Companies can manage their own internships" ON public.internships FOR ALL USING (
+    company_id IN (
+        SELECT id FROM public.companies 
+        WHERE profile_id = public.get_user_profile_id(auth.uid()) 
+        AND status = 'verified'
+    )
+);
 CREATE POLICY "Everyone can view active internships" ON public.internships FOR SELECT USING (status = 'active');
 
 -- Applications
