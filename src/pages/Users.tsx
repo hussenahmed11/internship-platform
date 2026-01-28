@@ -213,17 +213,12 @@ export default function Users() {
             case "advisor": return <Badge className="bg-advisor text-white">Advisor</Badge>;
             case "company": return <Badge className="bg-company text-white">Company</Badge>;
             case "student": return <Badge className="bg-student text-white">Student</Badge>;
-            case "verified_company": return <Badge className="bg-company text-white">Verified Company</Badge>;
-            case "pending_company": return <Badge className="bg-amber-500 text-white">Pending Company</Badge>;
-            case "rejected_company": return <Badge variant="destructive">Rejected Company</Badge>;
             default: return <Badge variant="secondary">{role}</Badge>;
         }
     };
 
-    const getStatusBadge = (user: any) => {
+    const getStatusBadge = (user: User) => {
         if (user.role === "company") {
-            // This would ideally come from the companies table join
-            // For now, we'll use a badge for the general onboarding/role
             return getRoleBadge(user.role);
         }
         return (

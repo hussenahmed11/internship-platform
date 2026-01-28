@@ -3,7 +3,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
-export type AppRole = "student" | "employee" | "advisor" | "coordinator" | "super_admin";
+export type AppRole = "student" | "company" | "advisor" | "coordinator" | "admin";
 
 interface Profile {
   id: string;
@@ -55,15 +55,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const profile = data as Profile;
 
-      if (profile.role === "employee") {
+      if (profile.role === "company") {
         const { data: companyData } = await supabase
           .from("companies")
-          .select("status")
+          .select("verified")
           .eq("profile_id", profile.id)
-          .single();
+          .maybeSingle();
 
         if (companyData) {
-          profile.company_status = companyData.status as "pending" | "verified" | "rejected";
+          profile.company_status = companyData.verified ? "verified" : "pending";
         }
       }
 

@@ -236,18 +236,9 @@ export function AdminDashboard() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Staff Account Creation */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5 text-admin" />
-              Staff Management
-            </CardTitle>
-            <CardDescription>Create accounts for staff members</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <StaffAccountCreation onAccountCreated={handleRefresh} />
-          </CardContent>
-        </Card>
+        <div className="lg:col-span-1">
+          <StaffAccountCreation onAccountCreated={handleRefresh} />
+        </div>
 
         {/* Pending Verifications */}
         <Card className="lg:col-span-1">

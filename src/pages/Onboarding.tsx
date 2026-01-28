@@ -142,7 +142,7 @@ export default function Onboarding() {
     }
   };
 
-  const roleConfig = {
+  const roleConfig: Record<string, { icon: any; color: string; bgColor: string; title: string; description: string }> = {
     student: {
       icon: GraduationCap,
       color: "text-student",

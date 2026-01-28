@@ -89,25 +89,25 @@ const getNavItems = (role: AppRole): NavItem[] => {
   switch (role) {
     case "student":
       return studentNavItems;
-    case "employee":
+    case "company":
       return companyNavItems;
     case "advisor":
       return advisorNavItems;
     case "coordinator":
       return coordinatorNavItems;
-    case "super_admin":
+    case "admin":
       return adminNavItems;
     default:
       return studentNavItems;
   }
 };
 
-const roleColors = {
+const roleColors: Record<AppRole, string> = {
   student: "from-student to-student-dark",
-  employee: "from-company to-company-dark",
+  company: "from-company to-company-dark",
   advisor: "from-advisor to-advisor-dark",
   coordinator: "from-coordinator to-coordinator-dark",
-  super_admin: "from-admin to-admin-dark",
+  admin: "from-admin to-admin-dark",
 };
 
 interface DashboardSidebarProps {

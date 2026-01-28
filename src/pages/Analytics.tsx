@@ -360,13 +360,13 @@ export default function Analytics() {
                                     </div>
                                     <div className="flex flex-col justify-center space-y-2 ml-4">
                                         {analytics?.pieData.map((entry, index) => (
-                                            <div key={entry.name} className="flex items-center gap-2">
+                                            <div key={String(entry.name)} className="flex items-center gap-2">
                                                 <div 
                                                     className="w-3 h-3 rounded-full" 
-                                                    style={{ backgroundColor: getStatusColor(entry.name) }}
+                                                    style={{ backgroundColor: getStatusColor(String(entry.name)) }}
                                                 />
-                                                <span className="text-sm font-medium">{entry.name}</span>
-                                                <Badge variant="outline">{entry.value}</Badge>
+                                                <span className="text-sm font-medium">{String(entry.name)}</span>
+                                                <Badge variant="outline">{String(entry.value)}</Badge>
                                             </div>
                                         ))}
                                     </div>
