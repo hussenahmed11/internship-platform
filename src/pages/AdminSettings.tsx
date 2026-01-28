@@ -1,144 +1,171 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Shield, Bell, Globe, Database, Save } from "lucide-react";
+import { Settings, Shield, Bell, Database, Users } from "lucide-react";
 
 export default function AdminSettings() {
-    return (
-        <DashboardLayout>
-            <div className="space-y-6 animate-fade-in">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-sidebar-primary">System Settings</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Global configuration and platform maintenance
-                    </p>
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Admin Settings</h1>
+          <p className="text-muted-foreground">
+            Manage system configuration and preferences
+          </p>
+        </div>
+
+        <Tabs defaultValue="general" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+            <TabsTrigger value="general" className="gap-2">
+              <Settings className="h-4 w-4" />
+              General
+            </TabsTrigger>
+            <TabsTrigger value="security" className="gap-2">
+              <Shield className="h-4 w-4" />
+              Security
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="gap-2">
+              <Bell className="h-4 w-4" />
+              Notifications
+            </TabsTrigger>
+            <TabsTrigger value="system" className="gap-2">
+              <Database className="h-4 w-4" />
+              System
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="general" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Platform Settings</CardTitle>
+                <CardDescription>
+                  Configure general platform settings and preferences
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="platformName">Platform Name</Label>
+                    <Input id="platformName" defaultValue="InternHub" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="supportEmail">Support Email</Label>
+                    <Input id="supportEmail" type="email" defaultValue="support@internhub.edu" />
+                  </div>
                 </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Maintenance Mode</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Enable to show maintenance page to users
+                    </p>
+                  </div>
+                  <Switch />
+                </div>
+                <Button>Save Changes</Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-                <Tabs defaultValue="general" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-4">
-                        <TabsTrigger value="general" className="gap-2">
-                            <Globe className="h-4 w-4" />
-                            General
-                        </TabsTrigger>
-                        <TabsTrigger value="security" className="gap-2">
-                            <Shield className="h-4 w-4" />
-                            Security
-                        </TabsTrigger>
-                        <TabsTrigger value="notifications" className="gap-2">
-                            <Bell className="h-4 w-4" />
-                            Notifications
-                        </TabsTrigger>
-                        <TabsTrigger value="maintenance" className="gap-2">
-                            <Database className="h-4 w-4" />
-                            Maintenance
-                        </TabsTrigger>
-                    </TabsList>
+          <TabsContent value="security" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Security Settings</CardTitle>
+                <CardDescription>
+                  Configure security and access control settings
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Two-Factor Authentication</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Require 2FA for admin accounts
+                    </p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Session Timeout</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Auto logout after inactivity
+                    </p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                <Button>Save Security Settings</Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-                    <TabsContent value="general">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Platform Configuration</CardTitle>
-                                <CardDescription>Update your institution's branding and global settings</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div className="grid gap-4 md:grid-cols-2">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="inst-name">Institution Name</Label>
-                                        <Input id="inst-name" defaultValue="Haramaya University" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="platform-url">Platform URL</Label>
-                                        <Input id="platform-url" defaultValue="https://internhub.edu" />
-                                    </div>
-                                </div>
+          <TabsContent value="notifications" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Notification Preferences</CardTitle>
+                <CardDescription>
+                  Configure system notification settings
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Email Notifications</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Send email notifications for important events
+                    </p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>New User Alerts</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Get notified when new users register
+                    </p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                <Button>Save Notification Settings</Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-                                <div className="space-y-4 pt-4 border-t">
-                                    <div className="flex items-center justify-between">
-                                        <div className="space-y-0.5">
-                                            <Label>Public Registration</Label>
-                                            <p className="text-xs text-muted-foreground">Allow new users to sign up without invitations</p>
-                                        </div>
-                                        <Switch />
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <div className="space-y-0.5">
-                                            <Label>Auto-Verify Companies</Label>
-                                            <p className="text-xs text-muted-foreground">Automatically approve verified domains</p>
-                                        </div>
-                                        <Switch defaultChecked />
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-end pt-4">
-                                    <Button className="bg-admin hover:opacity-90">
-                                        <Save className="mr-2 h-4 w-4" />
-                                        Save Changes
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-
-                    <TabsContent value="security">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Global Security Policy</CardTitle>
-                                <CardDescription>Authentication and access control rules</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="space-y-0.5">
-                                            <Label>Two-Factor Authentication (Required)</Label>
-                                            <p className="text-xs text-muted-foreground">Enforce 2FA for all administrative roles</p>
-                                        </div>
-                                        <Switch defaultChecked />
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <div className="space-y-0.5">
-                                            <Label>API Access</Label>
-                                            <p className="text-xs text-muted-foreground">Enable external API integrations</p>
-                                        </div>
-                                        <Switch />
-                                    </div>
-                                </div>
-                                <Button variant="outline" className="w-full">Manage Permission Groups</Button>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-
-                    <TabsContent value="maintenance">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-red-600">Danger Zone</CardTitle>
-                                <CardDescription>Critical system operations and resets</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="p-4 rounded-lg border border-red-200 bg-red-50 space-y-4">
-                                    <div className="flex items-center justify-between gap-4">
-                                        <div className="space-y-1">
-                                            <p className="font-semibold text-red-600">Clear System Cache</p>
-                                            <p className="text-xs text-red-500">Force refresh all session tokens and cache</p>
-                                        </div>
-                                        <Button variant="destructive" size="sm">Clear</Button>
-                                    </div>
-                                    <div className="flex items-center justify-between gap-4 pt-4 border-t border-red-200">
-                                        <div className="space-y-1">
-                                            <p className="font-semibold text-red-600">Database Purge</p>
-                                            <p className="text-xs text-red-500">Permanently delete all logs older than 1 year</p>
-                                        </div>
-                                        <Button variant="destructive" size="sm">Purge</Button>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                </Tabs>
-            </div>
-        </DashboardLayout>
-    );
+          <TabsContent value="system" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>System Information</CardTitle>
+                <CardDescription>
+                  View system status and configuration
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="rounded-lg border p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Database className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">Database</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Supabase PostgreSQL</p>
+                    <p className="text-sm text-green-600">Connected</p>
+                  </div>
+                  <div className="rounded-lg border p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">Active Users</span>
+                    </div>
+                    <p className="text-2xl font-bold">--</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </DashboardLayout>
+  );
 }

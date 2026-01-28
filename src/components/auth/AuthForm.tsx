@@ -31,7 +31,7 @@ export function AuthForm() {
   const [showSignInPassword, setShowSignInPassword] = useState(false);
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
-  const { signIn, signUp, signInWithGoogle, signInWithLinkedIn, resendConfirmationEmail } = useAuth();
+  const { signIn, signUp, resendConfirmationEmail } = useAuth();
   const navigate = useNavigate();
 
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -164,15 +164,6 @@ export function AuthForm() {
     setIsLoading(false);
   };
 
-  const handleSocialAuth = async (provider: 'google' | 'linkedin') => {
-    setIsLoading(true);
-    const { error } = provider === 'google' ? await signInWithGoogle() : await signInWithLinkedIn();
-    if (error) {
-      toast.error(error.message);
-      setIsLoading(false);
-    }
-  };
-
   return (
     <Card className="w-full max-w-lg border-none shadow-xl bg-card/95 backdrop-blur-sm">
       <CardHeader className="space-y-1 text-center pb-2">
@@ -192,36 +183,6 @@ export function AuthForm() {
           </TabsList>
 
           <TabsContent value="signin" className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <Button
-                variant="outline"
-                onClick={() => handleSocialAuth('google')}
-                disabled={isLoading}
-                className="w-full"
-              >
-                <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path></svg>
-                Google
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleSocialAuth('linkedin')}
-                disabled={isLoading}
-                className="w-full"
-              >
-                <svg className="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M100.28 448H7.4V148.9h92.88zM53.79 108.1C24.09 108.1 0 83.5 0 53.8a53.79 53.79 0 0 1 107.58 0c0 29.7-24.1 54.3-53.79 54.3zM447.9 448h-92.68V302.4c0-34.7-.7-79.2-48.29-79.2-48.29 0-55.69 37.7-55.69 76.7V448h-92.78V148.9h89.08v40.8h1.3c12.4-23.5 42.69-48.3 87.88-48.3 94 0 111.28 61.9 111.28 142.3V448z" /></svg>
-                LinkedIn
-              </Button>
-            </div>
-
-            <div className="relative mb-6">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-              </div>
-            </div>
-
             <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="signin-email">Email</Label>

@@ -19,7 +19,6 @@ const roleLabels = {
   company: "Employer",
   advisor: "Academic Advisor",
   coordinator: "Department Coordinator",
-  admin: "Administrator",
 };
 
 const roleBadgeClasses = {
@@ -27,7 +26,6 @@ const roleBadgeClasses = {
   company: "role-badge-company",
   advisor: "role-badge-advisor",
   coordinator: "role-badge-coordinator",
-  admin: "role-badge-admin",
 };
 
 export function DashboardHeader() {

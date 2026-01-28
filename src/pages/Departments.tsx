@@ -254,7 +254,7 @@ export default function Departments() {
                     </div>
                     <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button className="bg-gradient-admin text-white">
+                            <Button className="bg-gradient-coordinator text-white">
                                 <Plus className="mr-2 h-4 w-4" />
                                 Add Department
                             </Button>
@@ -323,7 +323,7 @@ export default function Departments() {
                             <CardTitle className="text-sm font-medium text-muted-foreground">
                                 Total Departments
                             </CardTitle>
-                            <Building2 className="h-5 w-5 text-admin" />
+                            <Building2 className="h-5 w-5 text-coordinator" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-3xl font-bold">
@@ -422,11 +422,11 @@ export default function Departments() {
                                     return (
                                         <div
                                             key={dept.id}
-                                            className="flex flex-col p-4 rounded-xl border bg-card hover:border-admin/50 hover:shadow-md transition-all group"
+                                            className="flex flex-col p-4 rounded-xl border bg-card hover:border-coordinator/50 hover:shadow-md transition-all group"
                                         >
                                             <div className="flex items-start justify-between mb-4">
-                                                <div className="p-2 rounded-lg bg-admin-light/30 group-hover:bg-admin-light/50 transition-colors">
-                                                    <Building2 className="h-5 w-5 text-admin" />
+                                                <div className="p-2 rounded-lg bg-coordinator-light/30 group-hover:bg-coordinator-light/50 transition-colors">
+                                                    <Building2 className="h-5 w-5 text-coordinator" />
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <Badge variant="outline" className="font-mono text-xs">

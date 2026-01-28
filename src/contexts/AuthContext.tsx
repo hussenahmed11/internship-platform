@@ -3,7 +3,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
-export type AppRole = "student" | "company" | "advisor" | "coordinator" | "admin";
+export type AppRole = "student" | "company" | "advisor" | "coordinator";
 
 interface Profile {
   id: string;
@@ -25,8 +25,6 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signInWithGoogle: () => Promise<{ error: Error | null }>;
-  signInWithLinkedIn: () => Promise<{ error: Error | null }>;
   resendConfirmationEmail: (email: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -127,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const emailDomain = email.split('@')[1];
       if (emailDomain !== 'haramayauniversity.edu.et') {
         return { 
-          error: new Error('Self-registration is only allowed for @haramayauniversity.edu.et email addresses. Staff and admin accounts must be created by a Super Admin.') 
+          error: new Error('Self-registration is only allowed for @haramayauniversity.edu.et email addresses. Staff accounts must be created by a coordinator.') 
         };
       }
 
@@ -167,34 +165,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signInWithGoogle = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
-      return { error };
-    } catch (error) {
-      return { error: error as Error };
-    }
-  };
-
-  const signInWithLinkedIn = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "linkedin_oidc",
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
-      return { error };
-    } catch (error) {
-      return { error: error as Error };
-    }
-  };
-
   const resendConfirmationEmail = async (email: string) => {
     try {
       const { error } = await supabase.auth.resend({
@@ -223,8 +193,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         signUp,
         signIn,
-        signInWithGoogle,
-        signInWithLinkedIn,
         resendConfirmationEmail,
         signOut,
         refreshProfile,

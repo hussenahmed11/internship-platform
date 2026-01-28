@@ -76,15 +76,6 @@ const coordinatorNavItems: NavItem[] = [
   { title: "Messages", url: "/messages", icon: MessageSquare },
 ];
 
-const adminNavItems: NavItem[] = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Departments", url: "/departments", icon: Building2 },
-  { title: "All Users", url: "/users", icon: Users },
-  { title: "All Internships", url: "/internships", icon: Briefcase },
-  { title: "Analytics", url: "/analytics", icon: BarChart3 },
-  { title: "Settings", url: "/admin/settings", icon: Settings },
-];
-
 const getNavItems = (role: AppRole): NavItem[] => {
   switch (role) {
     case "student":
@@ -95,8 +86,6 @@ const getNavItems = (role: AppRole): NavItem[] => {
       return advisorNavItems;
     case "coordinator":
       return coordinatorNavItems;
-    case "admin":
-      return adminNavItems;
     default:
       return studentNavItems;
   }
@@ -107,7 +96,6 @@ const roleColors: Record<AppRole, string> = {
   company: "from-company to-company-dark",
   advisor: "from-advisor to-advisor-dark",
   coordinator: "from-coordinator to-coordinator-dark",
-  admin: "from-admin to-admin-dark",
 };
 
 interface DashboardSidebarProps {

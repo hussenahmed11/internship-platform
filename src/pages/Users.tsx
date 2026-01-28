@@ -117,7 +117,7 @@ export default function Users() {
                     user_id: crypto.randomUUID(), // Temporary UUID until actual signup
                     email: inviteData.email,
                     full_name: inviteData.full_name,
-                    role: inviteData.role as "student" | "company" | "advisor" | "coordinator" | "admin",
+                    role: inviteData.role as "student" | "company" | "advisor" | "coordinator",
                     department_id: inviteData.department_id || null,
                     onboarding_completed: false
                 }])
@@ -147,7 +147,7 @@ export default function Users() {
             id: string;
             updates: {
                 full_name?: string | null;
-                role?: "student" | "company" | "advisor" | "coordinator" | "admin";
+                role?: "student" | "company" | "advisor" | "coordinator";
                 department_id?: string | null;
             }
         }) => {
@@ -208,7 +208,6 @@ export default function Users() {
 
     const getRoleBadge = (role: string) => {
         switch (role) {
-            case "admin": return <Badge className="bg-admin text-white">Admin</Badge>;
             case "coordinator": return <Badge className="bg-coordinator text-white">Coordinator</Badge>;
             case "advisor": return <Badge className="bg-advisor text-white">Advisor</Badge>;
             case "company": return <Badge className="bg-company text-white">Company</Badge>;
@@ -261,7 +260,7 @@ export default function Users() {
             id: editingUser.id,
             updates: {
                 full_name: editFormData.full_name || null,
-                role: editFormData.role as "student" | "company" | "advisor" | "coordinator" | "admin",
+                role: editFormData.role as "student" | "company" | "advisor" | "coordinator",
                 department_id: editFormData.department_id || null
             }
         });
@@ -371,7 +370,6 @@ export default function Users() {
                                                 <SelectItem value="company">Company</SelectItem>
                                                 <SelectItem value="advisor">Advisor</SelectItem>
                                                 <SelectItem value="coordinator">Coordinator</SelectItem>
-                                                <SelectItem value="admin">Admin</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -516,7 +514,6 @@ export default function Users() {
                                         <SelectItem value="company">Company</SelectItem>
                                         <SelectItem value="advisor">Advisor</SelectItem>
                                         <SelectItem value="coordinator">Coordinator</SelectItem>
-                                        <SelectItem value="admin">Admin</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
@@ -725,7 +722,6 @@ export default function Users() {
                                         <SelectItem value="company">Company</SelectItem>
                                         <SelectItem value="advisor">Advisor</SelectItem>
                                         <SelectItem value="coordinator">Coordinator</SelectItem>
-                                        <SelectItem value="admin">Admin</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

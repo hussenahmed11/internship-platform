@@ -171,13 +171,6 @@ export default function Onboarding() {
       title: "Complete Your Coordinator Profile",
       description: "Set up your profile to manage department placements",
     },
-    admin: {
-      icon: BookOpen,
-      color: "text-admin",
-      bgColor: "bg-admin-light",
-      title: "Complete Your Admin Profile",
-      description: "Set up your administrator profile",
-    },
   };
 
   const config = roleConfig[profile?.role || "student"];

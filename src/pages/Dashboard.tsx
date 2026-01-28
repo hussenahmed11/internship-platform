@@ -4,7 +4,6 @@ import { StudentDashboard } from "@/components/dashboards/StudentDashboard";
 import { CompanyDashboard } from "@/components/dashboards/CompanyDashboard";
 import { AdvisorDashboard } from "@/components/dashboards/AdvisorDashboard";
 import { CoordinatorDashboard } from "@/components/dashboards/CoordinatorDashboard";
-import { AdminDashboard } from "@/components/dashboards/AdminDashboard";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -18,8 +17,7 @@ export default function Dashboard() {
         student: "student",
         company: "employee",
         advisor: "advisor",
-        coordinator: "coordinator",
-        admin: "admin"
+        coordinator: "coordinator"
       };
       const path = roleMap[profile.role] || "student";
       navigate(`/dashboard/${path}`, { replace: true });
