@@ -23,14 +23,14 @@ export function StaffAccountCreation({ onAccountCreated }: StaffAccountCreationP
   });
   const { profile } = useAuth();
 
-  // Only super admins can access this component
-  if (profile?.role !== "super_admin") {
+  // Only admins can access this component
+  if (profile?.role !== "admin") {
     return (
       <Card>
         <CardContent className="pt-6">
           <div className="text-center text-muted-foreground">
             <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Access denied. Only Super Admins can create staff accounts.</p>
+            <p>Access denied. Only Admins can create staff accounts.</p>
           </div>
         </CardContent>
       </Card>
@@ -48,12 +48,15 @@ export function StaffAccountCreation({ onAccountCreated }: StaffAccountCreationP
     setIsLoading(true);
 
     try {
-      // Call the Supabase function to create staff account
-      const { data, error } = await supabase.rpc('create_staff_account', {
-        p_email: formData.email,
-        p_full_name: formData.fullName,
-        p_role: formData.role as any,
-        p_department_id: formData.departmentId || null
+      // Create a profile entry for the staff member
+      // They will need to sign up with this email to activate their account
+      const { error } = await supabase.from("profiles").insert({
+        user_id: crypto.randomUUID(), // Placeholder until actual signup
+        email: formData.email,
+        full_name: formData.fullName,
+        role: formData.role as "advisor" | "coordinator" | "company",
+        department_id: formData.departmentId || null,
+        onboarding_completed: false
       });
 
       if (error) {
@@ -87,7 +90,7 @@ export function StaffAccountCreation({ onAccountCreated }: StaffAccountCreationP
           Create Staff Account
         </CardTitle>
         <CardDescription>
-          Create accounts for employees, advisors, and coordinators. Only Super Admins can perform this action.
+          Create accounts for company representatives, advisors, and coordinators. Only Admins can perform this action.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -127,13 +130,12 @@ export function StaffAccountCreation({ onAccountCreated }: StaffAccountCreationP
                 value={formData.role}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}
                 disabled={isLoading}
-                required
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="employee">Employee (Company Representative)</SelectItem>
+                  <SelectItem value="company">Company Representative</SelectItem>
                   <SelectItem value="advisor">Advisor (Faculty)</SelectItem>
                   <SelectItem value="coordinator">Coordinator (Department)</SelectItem>
                 </SelectContent>

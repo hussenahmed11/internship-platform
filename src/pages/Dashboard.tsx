@@ -16,10 +16,10 @@ export default function Dashboard() {
     if (!loading && profile) {
       const roleMap: Record<string, string> = {
         student: "student",
-        employee: "employee",
+        company: "employee",
         advisor: "advisor",
         coordinator: "coordinator",
-        super_admin: "admin"
+        admin: "admin"
       };
       const path = roleMap[profile.role] || "student";
       navigate(`/dashboard/${path}`, { replace: true });

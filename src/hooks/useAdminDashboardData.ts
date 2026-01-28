@@ -109,7 +109,7 @@ export function useAdminDashboardData() {
                 const { data: pendingCompanies, error: pendingError } = await supabase
                     .from("companies")
                     .select("id, company_name, created_at")
-                    .eq("status", "pending")
+                    .eq("verified", false)
                     .limit(3);
 
                 if (!pendingError && pendingCompanies) {
