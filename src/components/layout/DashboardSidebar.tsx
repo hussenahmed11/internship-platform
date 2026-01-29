@@ -40,7 +40,7 @@ interface NavItem {
 }
 
 const studentNavItems: NavItem[] = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/student/dashboard", icon: LayoutDashboard },
   { title: "Browse Internships", url: "/internships", icon: Briefcase },
   { title: "My Applications", url: "/applications", icon: ClipboardList },
   { title: "Documents", url: "/documents", icon: FolderOpen },
@@ -49,7 +49,7 @@ const studentNavItems: NavItem[] = [
 ];
 
 const companyNavItems: NavItem[] = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/employer/dashboard", icon: LayoutDashboard },
   { title: "Post Internship", url: "/internships/new", icon: Briefcase },
   { title: "My Listings", url: "/listings", icon: FileText },
   { title: "Applications", url: "/applications", icon: ClipboardList },
@@ -58,7 +58,7 @@ const companyNavItems: NavItem[] = [
 ];
 
 const advisorNavItems: NavItem[] = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/advisor/dashboard", icon: LayoutDashboard },
   { title: "My Advisees", url: "/advisees", icon: Users },
   { title: "Approvals", url: "/approvals", icon: CheckSquare },
   { title: "Evaluations", url: "/evaluations", icon: BookOpen },
@@ -67,13 +67,23 @@ const advisorNavItems: NavItem[] = [
 ];
 
 const coordinatorNavItems: NavItem[] = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/coordinator/dashboard", icon: LayoutDashboard },
   { title: "Students", url: "/students", icon: Users },
   { title: "Companies", url: "/companies", icon: Building2 },
   { title: "Internships", url: "/internships", icon: Briefcase },
   { title: "Approvals", url: "/approvals", icon: CheckSquare },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Messages", url: "/messages", icon: MessageSquare },
+];
+
+const adminNavItems: NavItem[] = [
+  { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
+  { title: "Users", url: "/users", icon: Users },
+  { title: "Departments", url: "/departments", icon: Building2 },
+  { title: "Companies", url: "/companies", icon: Building2 },
+  { title: "Internships", url: "/internships", icon: Briefcase },
+  { title: "Analytics", url: "/analytics", icon: BarChart3 },
+  { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 
 const getNavItems = (role: AppRole): NavItem[] => {
@@ -86,6 +96,8 @@ const getNavItems = (role: AppRole): NavItem[] => {
       return advisorNavItems;
     case "coordinator":
       return coordinatorNavItems;
+    case "admin":
+      return adminNavItems;
     default:
       return studentNavItems;
   }
@@ -96,6 +108,7 @@ const roleColors: Record<AppRole, string> = {
   company: "from-company to-company-dark",
   advisor: "from-advisor to-advisor-dark",
   coordinator: "from-coordinator to-coordinator-dark",
+  admin: "from-primary to-primary/80",
 };
 
 interface DashboardSidebarProps {

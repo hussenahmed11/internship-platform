@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
 import {
   Users,
   Building2,
@@ -42,11 +43,14 @@ export function AdminDashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
-        <p className="text-muted-foreground mt-1">
-          System overview and management
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+          <p className="text-muted-foreground mt-1">
+            System overview and management
+          </p>
+        </div>
+        <CreateUserDialog />
       </div>
 
       {/* Stats Grid */}

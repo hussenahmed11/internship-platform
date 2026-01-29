@@ -14,18 +14,20 @@ import { Bell, LogOut, Settings, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
-const roleLabels = {
+const roleLabels: Record<string, string> = {
   student: "Student",
   company: "Employer",
   advisor: "Academic Advisor",
   coordinator: "Department Coordinator",
+  admin: "Administrator",
 };
 
-const roleBadgeClasses = {
+const roleBadgeClasses: Record<string, string> = {
   student: "role-badge-student",
   company: "role-badge-company",
   advisor: "role-badge-advisor",
   coordinator: "role-badge-coordinator",
+  admin: "bg-primary/10 text-primary border-primary/20",
 };
 
 export function DashboardHeader() {
