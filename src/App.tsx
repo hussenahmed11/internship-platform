@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -33,38 +34,224 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+
+            {/* Dashboard redirect based on role */}
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dashboard/student" element={<DashboardLayout><StudentDashboard /></DashboardLayout>} />
-            <Route path="/dashboard/employee" element={<DashboardLayout><CompanyDashboard /></DashboardLayout>} />
-            <Route path="/dashboard/advisor" element={<DashboardLayout><AdvisorDashboard /></DashboardLayout>} />
-            <Route path="/dashboard/coordinator" element={<DashboardLayout><CoordinatorDashboard /></DashboardLayout>} />
-            <Route path="/dashboard/admin" element={<DashboardLayout><AdminDashboard /></DashboardLayout>} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/departments" element={<Departments />} />
-            <Route path="/users" element={<Users />} />
-            <Route path="/internships" element={<Internships />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/admin/settings" element={<AdminSettings />} />
-            <Route path="/reports" element={<FeaturePlaceholder title="System Reports" />} />
-            <Route path="/help" element={<Help />} />
 
-            {/* Placeholder routes for other roles */}
-            <Route path="/applications" element={<FeaturePlaceholder title="Applications Management" />} />
-            <Route path="/documents" element={<FeaturePlaceholder title="Document Storage" />} />
-            <Route path="/messages" element={<FeaturePlaceholder title="Messaging System" />} />
-            <Route path="/schedule" element={<FeaturePlaceholder title="Calendar & Scheduling" />} />
-            <Route path="/internships/new" element={<FeaturePlaceholder title="Internship Creation" />} />
-            <Route path="/listings" element={<FeaturePlaceholder title="My Listings" />} />
-            <Route path="/interviews" element={<FeaturePlaceholder title="Interview Management" />} />
-            <Route path="/advisees" element={<FeaturePlaceholder title="Advisee Monitoring" />} />
-            <Route path="/approvals" element={<FeaturePlaceholder title="Approval Workflow" />} />
-            <Route path="/evaluations" element={<FeaturePlaceholder title="Evaluation System" />} />
-            <Route path="/students" element={<FeaturePlaceholder title="Student Directory" />} />
-            <Route path="/companies" element={<FeaturePlaceholder title="Company Directory" />} />
+            {/* Role-specific dashboards with protection */}
+            <Route
+              path="/student/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <DashboardLayout><StudentDashboard /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/employer/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["company"]}>
+                  <DashboardLayout><CompanyDashboard /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/advisor/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["advisor"]}>
+                  <DashboardLayout><AdvisorDashboard /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/coordinator/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["coordinator"]}>
+                  <DashboardLayout><CoordinatorDashboard /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <DashboardLayout><AdminDashboard /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
 
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            {/* Onboarding */}
+            <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute>
+                  <Onboarding />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Admin-only routes */}
+            <Route
+              path="/departments"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "coordinator"]}>
+                  <DashboardLayout><Departments /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <DashboardLayout><Users /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/settings"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <DashboardLayout><AdminSettings /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Shared protected routes */}
+            <Route
+              path="/internships"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout><Internships /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analytics"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "coordinator"]}>
+                  <DashboardLayout><Analytics /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/help"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout><Help /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Protected placeholder routes */}
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "coordinator"]}>
+                  <DashboardLayout><FeaturePlaceholder title="System Reports" /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/applications"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout><FeaturePlaceholder title="Applications Management" /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/documents"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout><FeaturePlaceholder title="Document Storage" /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/messages"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout><FeaturePlaceholder title="Messaging System" /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/schedule"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout><FeaturePlaceholder title="Calendar & Scheduling" /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/internships/new"
+              element={
+                <ProtectedRoute allowedRoles={["company"]}>
+                  <DashboardLayout><FeaturePlaceholder title="Internship Creation" /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/listings"
+              element={
+                <ProtectedRoute allowedRoles={["company"]}>
+                  <DashboardLayout><FeaturePlaceholder title="My Listings" /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/interviews"
+              element={
+                <ProtectedRoute allowedRoles={["company"]}>
+                  <DashboardLayout><FeaturePlaceholder title="Interview Management" /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/advisees"
+              element={
+                <ProtectedRoute allowedRoles={["advisor"]}>
+                  <DashboardLayout><FeaturePlaceholder title="Advisee Monitoring" /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/approvals"
+              element={
+                <ProtectedRoute allowedRoles={["advisor", "coordinator"]}>
+                  <DashboardLayout><FeaturePlaceholder title="Approval Workflow" /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/evaluations"
+              element={
+                <ProtectedRoute allowedRoles={["advisor"]}>
+                  <DashboardLayout><FeaturePlaceholder title="Evaluation System" /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/students"
+              element={
+                <ProtectedRoute allowedRoles={["coordinator", "admin"]}>
+                  <DashboardLayout><FeaturePlaceholder title="Student Directory" /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/companies"
+              element={
+                <ProtectedRoute allowedRoles={["coordinator", "admin"]}>
+                  <DashboardLayout><FeaturePlaceholder title="Company Directory" /></DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

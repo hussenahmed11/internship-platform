@@ -3,7 +3,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
-export type AppRole = "student" | "company" | "advisor" | "coordinator";
+export type AppRole = "student" | "company" | "advisor" | "coordinator" | "admin";
 
 interface Profile {
   id: string;

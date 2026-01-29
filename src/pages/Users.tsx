@@ -95,41 +95,32 @@ export default function Users() {
         }
     });
 
-    // Invite user mutation
+    // Invite user mutation - uses edge function to properly create auth user + profile
     const inviteUserMutation = useMutation({
-        mutationFn: async (inviteData: { email: string; full_name: string; role: string; department_id: string }) => {
-            // Check if user already exists
-            const { data: existingUser } = await supabase
-                .from("profiles")
-                .select("id")
-                .eq("email", inviteData.email)
-                .single();
-
-            if (existingUser) {
-                throw new Error("User with this email already exists");
-            }
-
-            // For now, we'll create a profile entry that will be completed when the user signs up
-            // In a real implementation, you'd send an invitation email
-            const { data, error } = await supabase
-                .from("profiles")
-                .insert([{
-                    user_id: crypto.randomUUID(), // Temporary UUID until actual signup
+        mutationFn: async (inviteData: { email: string; full_name: string; role: string; department_id: string; password?: string }) => {
+            // Generate a temporary password if not provided
+            const password = inviteData.password || `Temp${Math.random().toString(36).slice(-8)}!1`;
+            
+            const { data, error } = await supabase.functions.invoke("create-user", {
+                body: {
                     email: inviteData.email,
+                    password: password,
                     full_name: inviteData.full_name,
-                    role: inviteData.role as "student" | "company" | "advisor" | "coordinator",
-                    department_id: inviteData.department_id || null,
-                    onboarding_completed: false
-                }])
-                .select()
-                .single();
+                    role: inviteData.role,
+                    department_id: inviteData.department_id || undefined,
+                },
+            });
 
-            if (error) throw error;
-            return data;
+            if (error) throw new Error(error.message);
+            if (data?.error) throw new Error(data.error);
+            
+            return { ...data, tempPassword: password };
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["users"] });
-            toast.success("User invitation sent successfully!");
+            toast.success(`User created! Temporary password: ${data.tempPassword}`, {
+                duration: 10000,
+            });
             setIsInviteDialogOpen(false);
             setInviteFormData({
                 email: "",
@@ -139,7 +130,7 @@ export default function Users() {
             });
         },
         onError: (error: any) => {
-            toast.error(error.message || "Failed to invite user");
+            toast.error(error.message || "Failed to create user");
         }
     });
     const updateUserMutation = useMutation({
@@ -147,7 +138,7 @@ export default function Users() {
             id: string;
             updates: {
                 full_name?: string | null;
-                role?: "student" | "company" | "advisor" | "coordinator";
+                role?: "student" | "company" | "advisor" | "coordinator" | "admin";
                 department_id?: string | null;
             }
         }) => {
@@ -208,6 +199,7 @@ export default function Users() {
 
     const getRoleBadge = (role: string) => {
         switch (role) {
+            case "admin": return <Badge className="bg-primary text-white">Admin</Badge>;
             case "coordinator": return <Badge className="bg-coordinator text-white">Coordinator</Badge>;
             case "advisor": return <Badge className="bg-advisor text-white">Advisor</Badge>;
             case "company": return <Badge className="bg-company text-white">Company</Badge>;
@@ -260,7 +252,7 @@ export default function Users() {
             id: editingUser.id,
             updates: {
                 full_name: editFormData.full_name || null,
-                role: editFormData.role as "student" | "company" | "advisor" | "coordinator",
+                role: editFormData.role as "student" | "company" | "advisor" | "coordinator" | "admin",
                 department_id: editFormData.department_id || null
             }
         });
@@ -370,6 +362,7 @@ export default function Users() {
                                                 <SelectItem value="company">Company</SelectItem>
                                                 <SelectItem value="advisor">Advisor</SelectItem>
                                                 <SelectItem value="coordinator">Coordinator</SelectItem>
+                                                <SelectItem value="admin">Admin</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>

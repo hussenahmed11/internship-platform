@@ -1,40 +1,37 @@
-import { useAuth } from "@/contexts/AuthContext";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { StudentDashboard } from "@/components/dashboards/StudentDashboard";
-import { CompanyDashboard } from "@/components/dashboards/CompanyDashboard";
-import { AdvisorDashboard } from "@/components/dashboards/AdvisorDashboard";
-import { CoordinatorDashboard } from "@/components/dashboards/CoordinatorDashboard";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { getDashboardPath } from "@/components/auth/ProtectedRoute";
+import { Loader2 } from "lucide-react";
 
 export default function Dashboard() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && profile) {
-      const roleMap: Record<string, string> = {
-        student: "student",
-        company: "employee",
-        advisor: "advisor",
-        coordinator: "coordinator"
-      };
-      const path = roleMap[profile.role] || "student";
-      navigate(`/dashboard/${path}`, { replace: true });
+    if (loading) return;
+
+    // Not authenticated - redirect to auth
+    if (!user) {
+      navigate("/auth", { replace: true });
+      return;
     }
-  }, [profile, loading, navigate]);
 
-  if (loading || !profile) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-full">
-          <div className="animate-pulse text-muted-foreground">
-            {loading ? "Loading..." : "Redirecting..."}
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
+    // Profile loaded - redirect to role-specific dashboard
+    if (profile) {
+      const dashboardPath = getDashboardPath(profile.role);
+      navigate(dashboardPath, { replace: true });
+    }
+  }, [user, profile, loading, navigate]);
 
-  return null;
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">
+          {loading ? "Loading..." : "Redirecting to your dashboard..."}
+        </p>
+      </div>
+    </div>
+  );
 }
