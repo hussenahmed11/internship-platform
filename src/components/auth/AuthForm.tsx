@@ -128,6 +128,10 @@ export function AuthForm() {
           </div>,
           { duration: 10000 }
         );
+      } else if (error.message === "INVALID_PASSWORD") {
+        toast.error("Incorrect password. Your account exists but the password you entered is wrong. Please try again or contact your administrator to reset it.");
+      } else if (error.message === "ACCOUNT_NOT_FOUND") {
+        toast.error("No account found with this email address. Please check your email or contact your administrator.");
       } else if (error.message.includes("Invalid login credentials")) {
         toast.error("Invalid email or password. Please check your credentials and try again.");
       } else if (error.message.includes("account setup incomplete")) {
