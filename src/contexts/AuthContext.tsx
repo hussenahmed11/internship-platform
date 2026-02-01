@@ -154,12 +154,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      return { error };
+      if (error) {
+        return { error };
+      }
+
+      // Check if profile exists for this user
+      if (data.user) {
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("id, role")
+          .eq("user_id", data.user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          return { error: new Error("Failed to fetch user profile. Please contact support.") };
+        }
+
+        if (!profileData) {
+          // Profile doesn't exist - sign out and return error
+          await supabase.auth.signOut();
+          return { error: new Error("User account setup incomplete. Please contact your administrator.") };
+        }
+      }
+
+      return { error: null };
     } catch (error) {
       return { error: error as Error };
     }
