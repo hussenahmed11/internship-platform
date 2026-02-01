@@ -129,7 +129,11 @@ export function AuthForm() {
           { duration: 10000 }
         );
       } else if (error.message.includes("Invalid login credentials")) {
-        toast.error("Invalid email or password");
+        toast.error("Invalid email or password. Please check your credentials and try again.");
+      } else if (error.message.includes("account setup incomplete")) {
+        toast.error("Your account setup is incomplete. Please contact your administrator.");
+      } else if (error.message.includes("Failed to fetch user profile")) {
+        toast.error("Unable to load your profile. Please try again or contact support.");
       } else {
         toast.error(error.message);
       }
