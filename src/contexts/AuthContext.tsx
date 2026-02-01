@@ -160,6 +160,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
+        // Check if this is an "Invalid login credentials" error
+        if (error.message.includes("Invalid login credentials")) {
+          // Check if a profile with this email exists to provide better error message
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("id, email")
+            .eq("email", email)
+            .maybeSingle();
+
+          if (profileData) {
+            // Profile exists, so the account exists but password is wrong
+            return { error: new Error("INVALID_PASSWORD") };
+          } else {
+            // No profile found - account doesn't exist
+            return { error: new Error("ACCOUNT_NOT_FOUND") };
+          }
+        }
         return { error };
       }
 
