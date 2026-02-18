@@ -16,6 +16,7 @@ import Analytics from "./pages/Analytics";
 import AdminSettings from "./pages/AdminSettings";
 import Help from "./pages/Help";
 import FeaturePlaceholder from "./pages/FeaturePlaceholder";
+import Companies from "./pages/Companies";
 import NotFound from "./pages/NotFound";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { StudentDashboard } from "@/components/dashboards/StudentDashboard";
@@ -242,11 +243,11 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route
+             <Route
               path="/companies"
               element={
                 <ProtectedRoute allowedRoles={["coordinator", "admin"]}>
-                  <DashboardLayout><FeaturePlaceholder title="Company Directory" /></DashboardLayout>
+                  <DashboardLayout><Companies /></DashboardLayout>
                 </ProtectedRoute>
               }
             />
