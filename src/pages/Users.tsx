@@ -71,9 +71,6 @@ export default function Users() {
                     *,
                     departments (
                         name
-                    ),
-                    companies (
-                        status
                     )
                 `)
                 .order("created_at", { ascending: false });
