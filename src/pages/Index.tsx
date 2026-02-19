@@ -92,16 +92,8 @@ export default function Index() {
               streamlines the placement process, and empowers academic oversight.
             </p>
             
-            <div className="flex justify-center animate-slide-up" style={{ animationDelay: "0.2s" }}>
-              <Button 
-                size="lg" 
-                className="px-8"
-                onClick={() => navigate("/auth")}
-              >
-                Sign In
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </div>
+
+
 
             {/* Stats */}
             <div className="flex justify-center gap-12 mt-16 animate-fade-in" style={{ animationDelay: "0.3s" }}>
@@ -205,14 +197,8 @@ export default function Index() {
             Join thousands of students and companies already using InternHub 
             to streamline their internship process.
           </p>
-          <Button 
-            size="lg" 
-            className="px-8"
-            onClick={() => navigate("/auth")}
-          >
-            Sign In
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
+
+
         </div>
       </section>
 
