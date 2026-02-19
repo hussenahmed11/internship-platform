@@ -63,11 +63,8 @@ export default function Index() {
             <span className="font-bold text-xl">InternHub</span>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate("/auth")}>
-              Sign In
-            </Button>
             <Button onClick={() => navigate("/auth")}>
-              Get Started
+              Sign In
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -75,59 +72,50 @@ export default function Index() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-hero opacity-95" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-30" />
+      <section className="relative overflow-hidden bg-background">
         
         <div className="relative container mx-auto px-4 py-24 md:py-32">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-dark text-white/90 text-sm font-medium mb-6 animate-fade-in">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted text-foreground text-sm font-medium mb-6 animate-fade-in">
               <Briefcase className="h-4 w-4" />
               University-Grade Internship Platform
             </div>
             
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight animate-slide-up">
+            <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 leading-tight animate-slide-up">
               Connect. Apply.
               <br />
-              <span className="text-white/80">Launch Your Career.</span>
+              <span className="text-muted-foreground">Launch Your Career.</span>
             </h1>
             
-            <p className="text-lg md:text-xl text-white/70 mb-8 max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: "0.1s" }}>
+            <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: "0.1s" }}>
               The all-in-one platform that connects students with leading companies, 
               streamlines the placement process, and empowers academic oversight.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style={{ animationDelay: "0.2s" }}>
+            <div className="flex justify-center animate-slide-up" style={{ animationDelay: "0.2s" }}>
               <Button 
                 size="lg" 
-                className="bg-white text-primary hover:bg-white/90 px-8"
+                className="px-8"
                 onClick={() => navigate("/auth")}
               >
-                Start Your Journey
+                Sign In
                 <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="border-white/30 text-white hover:bg-white/10"
-              >
-                Learn More
               </Button>
             </div>
 
             {/* Stats */}
             <div className="flex justify-center gap-12 mt-16 animate-fade-in" style={{ animationDelay: "0.3s" }}>
               <div className="text-center">
-                <div className="text-4xl font-bold text-white">500+</div>
-                <div className="text-sm text-white/60">Partner Companies</div>
+                <div className="text-4xl font-bold text-foreground">500+</div>
+                <div className="text-sm text-muted-foreground">Partner Companies</div>
               </div>
               <div className="text-center">
-                <div className="text-4xl font-bold text-white">10K+</div>
-                <div className="text-sm text-white/60">Students Placed</div>
+                <div className="text-4xl font-bold text-foreground">10K+</div>
+                <div className="text-sm text-muted-foreground">Students Placed</div>
               </div>
               <div className="text-center">
-                <div className="text-4xl font-bold text-white">95%</div>
-                <div className="text-sm text-white/60">Success Rate</div>
+                <div className="text-4xl font-bold text-foreground">95%</div>
+                <div className="text-sm text-muted-foreground">Success Rate</div>
               </div>
             </div>
           </div>
@@ -208,21 +196,21 @@ export default function Index() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-hero">
+      <section className="py-20 bg-muted/50">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
             Ready to Get Started?
           </h2>
-          <p className="text-white/70 mb-8 max-w-xl mx-auto">
+          <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
             Join thousands of students and companies already using InternHub 
             to streamline their internship process.
           </p>
           <Button 
             size="lg" 
-            className="bg-white text-primary hover:bg-white/90 px-8"
+            className="px-8"
             onClick={() => navigate("/auth")}
           >
-            Create Your Account
+            Sign In
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </div>
