@@ -95,21 +95,6 @@ export default function Index() {
 
 
 
-            {/* Stats */}
-            <div className="flex justify-center gap-12 mt-16 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-foreground">500+</div>
-                <div className="text-sm text-muted-foreground">Partner Companies</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-foreground">10K+</div>
-                <div className="text-sm text-muted-foreground">Students Placed</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-foreground">95%</div>
-                <div className="text-sm text-muted-foreground">Success Rate</div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
