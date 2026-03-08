@@ -145,55 +145,57 @@ export default function Documents() {
             {isAdmin ? "Manage and approve all platform documents" : "Upload and manage your documents"}
           </p>
         </div>
-        <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Upload className="mr-2 h-4 w-4" />
-              Upload Document
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Upload Document</DialogTitle>
-              <DialogDescription>Upload a document to the platform.</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="doc-name">Document Name</Label>
-                <Input id="doc-name" value={uploadName} onChange={(e) => setUploadName(e.target.value)} placeholder="e.g. My Resume" />
-              </div>
-              <div>
-                <Label>Document Type</Label>
-                <Select value={uploadType} onValueChange={setUploadType}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="resume">Resume</SelectItem>
-                    <SelectItem value="transcript">Transcript</SelectItem>
-                    <SelectItem value="cover_letter">Cover Letter</SelectItem>
-                    <SelectItem value="agreement">Agreement</SelectItem>
-                    <SelectItem value="evaluation">Evaluation</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>File</Label>
-                <Input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,.doc,.docx,.txt,.png,.jpg"
-                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setUploadOpen(false)}>Cancel</Button>
-              <Button onClick={handleUpload} disabled={uploadMutation.isPending}>
-                {uploadMutation.isPending ? "Uploading..." : "Upload"}
+        {!isAdmin && (
+          <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Upload className="mr-2 h-4 w-4" />
+                Upload Document
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Upload Document</DialogTitle>
+                <DialogDescription>Upload a document to the platform.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="doc-name">Document Name</Label>
+                  <Input id="doc-name" value={uploadName} onChange={(e) => setUploadName(e.target.value)} placeholder="e.g. My Resume" />
+                </div>
+                <div>
+                  <Label>Document Type</Label>
+                  <Select value={uploadType} onValueChange={setUploadType}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="resume">Resume</SelectItem>
+                      <SelectItem value="transcript">Transcript</SelectItem>
+                      <SelectItem value="cover_letter">Cover Letter</SelectItem>
+                      <SelectItem value="agreement">Agreement</SelectItem>
+                      <SelectItem value="evaluation">Evaluation</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>File</Label>
+                  <Input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.doc,.docx,.txt,.png,.jpg"
+                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setUploadOpen(false)}>Cancel</Button>
+                <Button onClick={handleUpload} disabled={uploadMutation.isPending}>
+                  {uploadMutation.isPending ? "Uploading..." : "Upload"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
