@@ -58,7 +58,7 @@ export default function Internships() {
 
   // Status update mutation
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+    mutationFn: async ({ id, status }: { id: string; status: "draft" | "active" | "closed" | "filled" }) => {
       const { error } = await supabase
         .from("internships")
         .update({ status })
@@ -107,7 +107,7 @@ export default function Internships() {
     }
   };
 
-  const statusOptions = ["draft", "active", "closed", "filled"];
+  const statusOptions: Array<"draft" | "active" | "closed" | "filled"> = ["draft", "active", "closed", "filled"];
 
   return (
     <div className="space-y-6 animate-fade-in">
