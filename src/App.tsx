@@ -20,6 +20,11 @@ import Companies from "./pages/Companies";
 import Documents from "./pages/Documents";
 import AuditLogs from "./pages/AuditLogs";
 import NotFound from "./pages/NotFound";
+import PostInternship from "./pages/PostInternship";
+import MyListings from "./pages/MyListings";
+import EmployerApplications from "./pages/EmployerApplications";
+import Interviews from "./pages/Interviews";
+import Messages from "./pages/Messages";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { StudentDashboard } from "@/components/dashboards/StudentDashboard";
 import { CompanyDashboard } from "@/components/dashboards/CompanyDashboard";
@@ -60,8 +65,15 @@ const App = () => (
             <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={["admin"]}><DashboardLayout><AdminSettings /></DashboardLayout></ProtectedRoute>} />
             <Route path="/audit-logs" element={<ProtectedRoute allowedRoles={["admin"]}><DashboardLayout><AuditLogs /></DashboardLayout></ProtectedRoute>} />
 
+            {/* Employer routes */}
+            <Route path="/internships/new" element={<ProtectedRoute allowedRoles={["company"]}><DashboardLayout><PostInternship /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/listings" element={<ProtectedRoute allowedRoles={["company"]}><DashboardLayout><MyListings /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/interviews" element={<ProtectedRoute allowedRoles={["company"]}><DashboardLayout><Interviews /></DashboardLayout></ProtectedRoute>} />
+
             {/* Shared protected routes */}
             <Route path="/internships" element={<ProtectedRoute><DashboardLayout><Internships /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/applications" element={<ProtectedRoute><DashboardLayout><EmployerApplications /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/messages" element={<ProtectedRoute><DashboardLayout><Messages /></DashboardLayout></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute allowedRoles={["admin", "coordinator"]}><DashboardLayout><Analytics /></DashboardLayout></ProtectedRoute>} />
             <Route path="/help" element={<ProtectedRoute><DashboardLayout><Help /></DashboardLayout></ProtectedRoute>} />
             <Route path="/documents" element={<ProtectedRoute><DashboardLayout><Documents /></DashboardLayout></ProtectedRoute>} />
@@ -69,12 +81,7 @@ const App = () => (
 
             {/* Protected placeholder routes */}
             <Route path="/reports" element={<ProtectedRoute allowedRoles={["admin", "coordinator"]}><DashboardLayout><FeaturePlaceholder title="System Reports" /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/applications" element={<ProtectedRoute><DashboardLayout><FeaturePlaceholder title="Applications Management" /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/messages" element={<ProtectedRoute><DashboardLayout><FeaturePlaceholder title="Messaging System" /></DashboardLayout></ProtectedRoute>} />
             <Route path="/schedule" element={<ProtectedRoute><DashboardLayout><FeaturePlaceholder title="Calendar & Scheduling" /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/internships/new" element={<ProtectedRoute allowedRoles={["company"]}><DashboardLayout><FeaturePlaceholder title="Internship Creation" /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/listings" element={<ProtectedRoute allowedRoles={["company"]}><DashboardLayout><FeaturePlaceholder title="My Listings" /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/interviews" element={<ProtectedRoute allowedRoles={["company"]}><DashboardLayout><FeaturePlaceholder title="Interview Management" /></DashboardLayout></ProtectedRoute>} />
             <Route path="/advisees" element={<ProtectedRoute allowedRoles={["advisor"]}><DashboardLayout><FeaturePlaceholder title="Advisee Monitoring" /></DashboardLayout></ProtectedRoute>} />
             <Route path="/approvals" element={<ProtectedRoute allowedRoles={["advisor", "coordinator"]}><DashboardLayout><FeaturePlaceholder title="Approval Workflow" /></DashboardLayout></ProtectedRoute>} />
             <Route path="/evaluations" element={<ProtectedRoute allowedRoles={["advisor"]}><DashboardLayout><FeaturePlaceholder title="Evaluation System" /></DashboardLayout></ProtectedRoute>} />
