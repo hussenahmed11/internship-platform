@@ -118,7 +118,20 @@ export function AuthForm() {
   };
 
   const handleGoogleSignIn = async () => {
-    toast.info("Google Sign-In is not configured. Please use email/password or contact your administrator.");
+    setIsGoogleLoading(true);
+    try {
+      const { lovable } = await import("@/integrations/lovable/index");
+      const { error } = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (error) {
+        toast.error(error.message || "Google sign-in failed");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Google sign-in failed");
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
   return (
