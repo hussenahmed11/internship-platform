@@ -108,7 +108,7 @@ export default function Onboarding() {
 
         if (studentError) throw studentError;
       } else if (profile.role === "company") {
-        const { error: companyError } = await supabase.from("companies").insert({
+        const { error: companyError } = await supabase.from("companies").upsert({
           profile_id: profile.id,
           company_name: formData.company_name,
           industry: formData.industry,
@@ -116,7 +116,7 @@ export default function Onboarding() {
           website: formData.website,
           description: formData.description,
           location: formData.location,
-        });
+        }, { onConflict: "profile_id" });
 
         if (companyError) throw companyError;
       } else if (profile.role === "advisor" || profile.role === "coordinator") {
