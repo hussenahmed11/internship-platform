@@ -5,7 +5,7 @@
 1. **Install**: `npm install`
 2. **Configure**: Update `.env` with your Supabase anon key
 3. **Database**: Run SQL from `SUPABASE_SETUP.md` sections 3 & 4
-4. **Admin User**: Follow `CREATE_ADMIN_USER.md`
+4. **Admin User**: Follow `MANUAL_USER_CREATION_GUIDE.md`
 5. **Start**: `npm run dev`
 
 ---
@@ -24,10 +24,7 @@
 ## 🔑 Create Admin User (Quick)
 
 ### Method 1: Dashboard (Easiest)
-1. Go to Auth Users → Add user
-2. Email: `admin@haramayauniversity.edu.et`
-3. Password: (your choice)
-4. ✅ Check "Auto Confirm User"
+See `MANUAL_USER_CREATION_GUIDE.md` for detailed instructions on creating users of any role.
 5. Copy the User ID
 6. Go to SQL Editor and run:
 ```sql

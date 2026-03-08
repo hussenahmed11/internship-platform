@@ -45,7 +45,8 @@ export function AdminDashboard() {
         activeInternships: activeInternships || 0,
       };
     },
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0, // Disable cache to always fetch fresh data
+    refetchOnMount: true,
   });
 
   // Pending actions
