@@ -1,6 +1,6 @@
-import { AppRole } from "@/contexts/AuthContext";
+import { AppRole, useAuth } from "@/contexts/AuthContext";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -30,6 +30,7 @@ import {
   BarChart3,
   CheckSquare,
   FolderOpen,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -117,9 +118,16 @@ interface DashboardSidebarProps {
 
 export function DashboardSidebar({ role }: DashboardSidebarProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { state } = useSidebar();
+  const { signOut } = useAuth();
   const collapsed = state === "collapsed";
   const navItems = getNavItems(role);
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/auth");
+  };
 
   return (
     <Sidebar
@@ -186,6 +194,15 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
                 <HelpCircle className="h-5 w-5" />
                 {!collapsed && <span>Help & Support</span>}
               </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={handleLogout}
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-destructive hover:bg-destructive/10 hover:text-destructive transition-all cursor-pointer"
+            >
+              <LogOut className="h-5 w-5" />
+              {!collapsed && <span>Logout</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
