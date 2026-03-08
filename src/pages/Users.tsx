@@ -363,12 +363,12 @@ export default function Users() {
                                     </div>
                                     <div>
                                         <Label htmlFor="invite-department">Department</Label>
-                                        <Select value={inviteFormData.department_id} onValueChange={(value) => setInviteFormData({ ...inviteFormData, department_id: value })}>
+                                        <Select value={inviteFormData.department_id || "none"} onValueChange={(value) => setInviteFormData({ ...inviteFormData, department_id: value === "none" ? "" : value })}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select department (optional)" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="">No Department</SelectItem>
+                                                <SelectItem value="none">No Department</SelectItem>
                                                 {departments?.map((dept) => (
                                                     <SelectItem key={dept.id} value={dept.id}>
                                                         {dept.name}
@@ -715,19 +715,19 @@ export default function Users() {
                             </div>
                             <div>
                                 <Label htmlFor="edit-department">Department</Label>
-                                <Select value={editFormData.department_id} onValueChange={(value) => setEditFormData({ ...editFormData, department_id: value })}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select department" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="">No Department</SelectItem>
-                                        {departments?.map((dept) => (
-                                            <SelectItem key={dept.id} value={dept.id}>
-                                                {dept.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                    <Select value={editFormData.department_id || "none"} onValueChange={(value) => setEditFormData({ ...editFormData, department_id: value === "none" ? "" : value })}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select department" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">No Department</SelectItem>
+                                            {departments?.map((dept) => (
+                                                <SelectItem key={dept.id} value={dept.id}>
+                                                    {dept.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                             </div>
                         </div>
                         <DialogFooter>
