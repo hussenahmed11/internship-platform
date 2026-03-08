@@ -23,6 +23,7 @@ import NotFound from "./pages/NotFound";
 import PostInternship from "./pages/PostInternship";
 import MyListings from "./pages/MyListings";
 import EmployerApplications from "./pages/EmployerApplications";
+import MyApplications from "./pages/MyApplications";
 import Interviews from "./pages/Interviews";
 import Messages from "./pages/Messages";
 import StudentDirectory from "./pages/StudentDirectory";
@@ -78,6 +79,7 @@ const App = () => (
 
             {/* Shared protected routes */}
             <Route path="/internships" element={<ProtectedRoute><DashboardLayout><Internships /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/student/applications" element={<ProtectedRoute allowedRoles={["student"]}><DashboardLayout><MyApplications /></DashboardLayout></ProtectedRoute>} />
             <Route path="/applications" element={<ProtectedRoute><DashboardLayout><EmployerApplications /></DashboardLayout></ProtectedRoute>} />
             <Route path="/messages" element={<ProtectedRoute><DashboardLayout><Messages /></DashboardLayout></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute allowedRoles={["admin", "coordinator"]}><DashboardLayout><Analytics /></DashboardLayout></ProtectedRoute>} />
