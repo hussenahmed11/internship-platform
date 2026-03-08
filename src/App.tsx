@@ -16,6 +16,7 @@ import Analytics from "./pages/Analytics";
 import AdminSettings from "./pages/AdminSettings";
 import Help from "./pages/Help";
 import FeaturePlaceholder from "./pages/FeaturePlaceholder";
+import Schedule from "./pages/Schedule";
 import Companies from "./pages/Companies";
 import Documents from "./pages/Documents";
 import AuditLogs from "./pages/AuditLogs";
@@ -89,7 +90,7 @@ const App = () => (
 
             {/* Protected placeholder routes */}
             <Route path="/reports" element={<ProtectedRoute allowedRoles={["admin", "coordinator"]}><DashboardLayout><FeaturePlaceholder title="System Reports" /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/schedule" element={<ProtectedRoute><DashboardLayout><FeaturePlaceholder title="Calendar & Scheduling" /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/schedule" element={<ProtectedRoute><DashboardLayout><Schedule /></DashboardLayout></ProtectedRoute>} />
             <Route path="/advisees" element={<ProtectedRoute allowedRoles={["advisor"]}><DashboardLayout><FeaturePlaceholder title="Advisee Monitoring" /></DashboardLayout></ProtectedRoute>} />
             <Route path="/evaluations" element={<ProtectedRoute allowedRoles={["advisor"]}><DashboardLayout><FeaturePlaceholder title="Evaluation System" /></DashboardLayout></ProtectedRoute>} />
 
