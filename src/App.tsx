@@ -23,6 +23,7 @@ import NotFound from "./pages/NotFound";
 import PostInternship from "./pages/PostInternship";
 import MyListings from "./pages/MyListings";
 import EmployerApplications from "./pages/EmployerApplications";
+import MyApplications from "./pages/MyApplications";
 import Interviews from "./pages/Interviews";
 import Messages from "./pages/Messages";
 import StudentDirectory from "./pages/StudentDirectory";
