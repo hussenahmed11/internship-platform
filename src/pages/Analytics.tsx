@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart3, TrendingUp, Users, Briefcase, CheckCircle2, AlertCircle, Calendar, Clock, Target, Award } from "lucide-react";
