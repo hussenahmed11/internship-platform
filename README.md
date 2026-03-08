@@ -1,73 +1,95 @@
-# Welcome to your Lovable project
+# Internship Management System
 
-## Project info
+A comprehensive platform for managing university internship programs, built with React, TypeScript, and Supabase.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Quick Setup
 
-## How can I edit this code?
+### 1. Install Dependencies
+```bash
+npm install
+```
 
-There are several ways of editing your application.
+### 2. Configure Environment
+Create a `.env` file (use `.env.example` as template):
+```env
+VITE_SUPABASE_URL=https://jubbpyoqcarnylbeslyz.supabase.co
+VITE_SUPABASE_ANON_KEY=your_anon_key_from_supabase_dashboard
+```
 
-**Use Lovable**
+Get your anon key from: https://supabase.com/dashboard/project/jubbpyoqcarnylbeslyz/settings/api
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### 3. Set Up Database
+See `SUPABASE_SETUP.md` for complete database setup instructions including:
+- Database schema SQL
+- Row Level Security policies
+- Authentication configuration
 
-Changes made via Lovable will be committed automatically to this repo.
+### 4. Create Admin User
+See `CREATE_ADMIN_USER.md` for step-by-step instructions to create your first admin user.
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### 5. Run Development Server
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Technology Stack
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- **Frontend**: React 18 + TypeScript
+- **UI**: Shadcn UI + Tailwind CSS
+- **State**: TanStack Query
+- **Routing**: React Router v6
+- **Backend**: Supabase (PostgreSQL, Auth, Storage)
+- **Build**: Vite
 
-**Use GitHub Codespaces**
+## Features
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- Role-based access control (Admin, Student, Employer, Advisor, Coordinator)
+- Internship posting and application management
+- Multi-level approval workflow
+- Document management
+- Real-time notifications
+- Messaging system
+- Analytics dashboard
+- Audit logging
 
-## What technologies are used for this project?
+## User Roles
 
-This project is built with:
+- **Admin**: Full system access, user management
+- **Student**: Apply for internships, track applications
+- **Employer**: Post internships, review applications
+- **Advisor**: Review student applications, provide guidance
+- **Coordinator**: Oversee program, final approvals
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Development
 
-## How can I deploy this project?
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run lint         # Run ESLint
+```
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## Deployment
 
-## Can I connect a custom domain to my Lovable project?
+### Vercel (Recommended)
+1. Push code to GitHub
+2. Import project in Vercel
+3. Add environment variables
+4. Deploy
 
-Yes, you can!
+### Netlify
+1. Push code to GitHub
+2. Import project in Netlify
+3. Build command: `npm run build`
+4. Publish directory: `dist`
+5. Add environment variables
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Support
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- **Database Setup**: See `SUPABASE_SETUP.md`
+- **Supabase Dashboard**: https://supabase.com/dashboard/project/jubbpyoqcarnylbeslyz
+- **Supabase Docs**: https://supabase.com/docs
+
+## License
+
+MIT

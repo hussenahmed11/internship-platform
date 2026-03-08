@@ -118,18 +118,7 @@ export function AuthForm() {
   };
 
   const handleGoogleSignIn = async () => {
-    setIsGoogleLoading(true);
-    try {
-      const { lovable } = await import("@/integrations/lovable/index");
-      const { error } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
-      });
-      if (error) toast.error(error.message);
-    } catch {
-      toast.error("Failed to initiate Google sign-in.");
-    } finally {
-      setIsGoogleLoading(false);
-    }
+    toast.info("Google Sign-In is not configured. Please use email/password or contact your administrator.");
   };
 
   return (

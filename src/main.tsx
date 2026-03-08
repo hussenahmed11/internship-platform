@@ -37,11 +37,11 @@ if (!rootElement) {
 }
 
 // Check for critical environment variables
-if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
+if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
   console.error("Missing Supabase environment variables!");
   const missing = [];
   if (!import.meta.env.VITE_SUPABASE_URL) missing.push("VITE_SUPABASE_URL");
-  if (!import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) missing.push("VITE_SUPABASE_PUBLISHABLE_KEY");
+  if (!import.meta.env.VITE_SUPABASE_ANON_KEY) missing.push("VITE_SUPABASE_ANON_KEY");
   
   // Render error immediately
   const errorDiv = document.createElement("div");
