@@ -12,12 +12,14 @@ import {
   Building2,
   GraduationCap,
   Briefcase,
-  TrendingUp,
   AlertCircle,
   CheckCircle,
   Clock,
   Settings,
   BarChart3,
+  ShieldAlert,
+  UserX,
+  FileWarning,
 } from "lucide-react";
 
 export function AdminDashboard() {
@@ -50,18 +52,38 @@ export function AdminDashboard() {
     staleTime: 2 * 60 * 1000,
   });
 
-  // Fetch recent activity from audit_logs or recent profiles/applications
+  // Pending actions
+  const { data: pending, isLoading: pendingLoading } = useQuery({
+    queryKey: ["admin-pending-actions"],
+    queryFn: async () => {
+      const [
+        { count: unverifiedCompanies },
+        { count: pendingApplications },
+        { count: incompleteOnboarding },
+      ] = await Promise.all([
+        supabase.from("companies").select("*", { count: "exact", head: true }).eq("verified", false),
+        supabase.from("applications").select("*", { count: "exact", head: true }).eq("status", "applied"),
+        supabase.from("profiles").select("*", { count: "exact", head: true }).eq("onboarding_completed", false),
+      ]);
+      return {
+        unverifiedCompanies: unverifiedCompanies || 0,
+        pendingApplications: pendingApplications || 0,
+        incompleteOnboarding: incompleteOnboarding || 0,
+      };
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+
+  // Fetch recent activity
   const { data: recentActivity, isLoading: activityLoading } = useQuery({
     queryKey: ["admin-recent-activity"],
     queryFn: async () => {
-      // Get recent user registrations
       const { data: recentUsers } = await supabase
         .from("profiles")
         .select("full_name, email, role, created_at")
         .order("created_at", { ascending: false })
         .limit(3);
 
-      // Get recent applications
       const { data: recentApps } = await supabase
         .from("applications")
         .select(`
@@ -94,7 +116,6 @@ export function AdminDashboard() {
         });
       });
 
-      // Sort by most recent and take top 5
       return activities.slice(0, 5);
     },
     staleTime: 60 * 1000,
@@ -115,6 +136,32 @@ export function AdminDashboard() {
     { label: "Analytics", icon: BarChart3, path: "/analytics", description: "View system analytics" },
     { label: "Settings", icon: Settings, path: "/admin/settings", description: "System configuration" },
   ];
+
+  const pendingItems = [
+    {
+      label: "Unverified Companies",
+      count: pending?.unverifiedCompanies || 0,
+      icon: ShieldAlert,
+      path: "/companies",
+      color: "text-yellow-600",
+    },
+    {
+      label: "Pending Applications",
+      count: pending?.pendingApplications || 0,
+      icon: FileWarning,
+      path: "/internships",
+      color: "text-orange-600",
+    },
+    {
+      label: "Incomplete Onboarding",
+      count: pending?.incompleteOnboarding || 0,
+      icon: UserX,
+      path: "/users",
+      color: "text-red-600",
+    },
+  ];
+
+  const totalPending = pendingItems.reduce((s, i) => s + i.count, 0);
 
   const getHealthBadge = (status?: string) => {
     if (!status) return <Badge variant="secondary">Loading</Badge>;
@@ -154,6 +201,44 @@ export function AdminDashboard() {
           </Card>
         ))}
       </div>
+
+      {/* Pending Actions */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Pending Actions</CardTitle>
+              <CardDescription>Items requiring your attention</CardDescription>
+            </div>
+            {!pendingLoading && totalPending > 0 && (
+              <Badge variant="destructive">{totalPending} pending</Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {pendingLoading ? (
+            <div className="grid gap-4 md:grid-cols-3">
+              {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20" />)}
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-3">
+              {pendingItems.map((item) => (
+                <button
+                  key={item.label}
+                  onClick={() => navigate(item.path)}
+                  className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors text-left"
+                >
+                  <item.icon className={`h-8 w-8 ${item.color}`} />
+                  <div>
+                    <p className="text-2xl font-bold">{item.count}</p>
+                    <p className="text-xs text-muted-foreground">{item.label}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Quick Actions */}
       <Card>
