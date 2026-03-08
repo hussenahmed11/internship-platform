@@ -107,7 +107,7 @@ export default function Internships() {
     }
   };
 
-  const statusOptions = ["draft", "active", "closed", "filled"];
+  const statusOptions: Array<"draft" | "active" | "closed" | "filled"> = ["draft", "active", "closed", "filled"];
 
   return (
     <div className="space-y-6 animate-fade-in">
