@@ -29,6 +29,9 @@ import Interviews from "./pages/Interviews";
 import Messages from "./pages/Messages";
 import StudentDirectory from "./pages/StudentDirectory";
 import Approvals from "./pages/Approvals";
+import AdvisorApprovals from "./pages/AdvisorApprovals";
+import Advisees from "./pages/Advisees";
+import Evaluations from "./pages/Evaluations";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { StudentDashboard } from "@/components/dashboards/StudentDashboard";
 import { CompanyDashboard } from "@/components/dashboards/CompanyDashboard";
@@ -91,8 +94,9 @@ const App = () => (
             {/* Protected placeholder routes */}
             <Route path="/reports" element={<ProtectedRoute allowedRoles={["admin", "coordinator"]}><DashboardLayout><FeaturePlaceholder title="System Reports" /></DashboardLayout></ProtectedRoute>} />
             <Route path="/schedule" element={<ProtectedRoute><DashboardLayout><Schedule /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/advisees" element={<ProtectedRoute allowedRoles={["advisor"]}><DashboardLayout><FeaturePlaceholder title="Advisee Monitoring" /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/evaluations" element={<ProtectedRoute allowedRoles={["advisor"]}><DashboardLayout><FeaturePlaceholder title="Evaluation System" /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/advisees" element={<ProtectedRoute allowedRoles={["advisor"]}><DashboardLayout><Advisees /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/evaluations" element={<ProtectedRoute allowedRoles={["advisor"]}><DashboardLayout><Evaluations /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/advisor/approvals" element={<ProtectedRoute allowedRoles={["advisor"]}><DashboardLayout><AdvisorApprovals /></DashboardLayout></ProtectedRoute>} />
 
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
