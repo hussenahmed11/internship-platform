@@ -120,13 +120,13 @@ export default function Onboarding() {
 
         if (companyError) throw companyError;
       } else if (profile.role === "advisor" || profile.role === "coordinator") {
-        const { error: facultyError } = await supabase.from("faculty").insert({
+        const { error: facultyError } = await supabase.from("faculty").upsert({
           profile_id: profile.id,
           title: formData.title,
           office_location: formData.office_location,
           office_hours: formData.office_hours,
           specialization: formData.specialization ? formData.specialization.split(",").map((s) => s.trim()) : [],
-        });
+        }, { onConflict: "profile_id" });
 
         if (facultyError) throw facultyError;
       }
