@@ -1,4 +1,3 @@
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -288,7 +287,6 @@ export default function Users() {
     } : null;
 
     return (
-        <DashboardLayout>
             <div className="space-y-6 animate-fade-in">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex-1">
@@ -753,6 +751,5 @@ export default function Users() {
                     </DialogContent>
                 </Dialog>
             </div>
-        </DashboardLayout>
     );
 }

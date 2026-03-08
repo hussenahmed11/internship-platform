@@ -83,7 +83,9 @@ const adminNavItems: NavItem[] = [
   { title: "Departments", url: "/departments", icon: Building2 },
   { title: "Companies", url: "/companies", icon: Building2 },
   { title: "Internships", url: "/internships", icon: Briefcase },
+  { title: "Documents", url: "/documents", icon: FolderOpen },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
+  { title: "Audit Logs", url: "/audit-logs", icon: ClipboardList },
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 
