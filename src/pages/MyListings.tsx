@@ -65,7 +65,7 @@ export default function MyListings() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+    mutationFn: async ({ id, status }: { id: string; status: "draft" | "active" | "closed" | "filled" }) => {
       const { error } = await supabase.from("internships").update({ status }).eq("id", id);
       if (error) throw error;
     },
