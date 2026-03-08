@@ -158,31 +158,16 @@ export default function Users() {
         }
     });
 
-    // Delete user mutation
+    // Delete user mutation - uses edge function to properly delete auth user + profile
     const deleteUserMutation = useMutation({
-        mutationFn: async (userId: string) => {
-            // First check if user has any dependencies
-            const { data: studentData } = await supabase
-                .from("students")
-                .select("id")
-                .eq("profile_id", userId)
-                .single();
+        mutationFn: async (profileId: string) => {
+            const { data, error } = await supabase.functions.invoke("delete-user", {
+                body: { profile_id: profileId },
+            });
 
-            const { data: companyData } = await supabase
-                .from("companies")
-                .select("id")
-                .eq("profile_id", userId)
-                .single();
-
-            if (studentData || companyData) {
-                throw new Error("Cannot delete user with existing student or company records");
-            }
-
-            const { error } = await supabase
-                .from("profiles")
-                .delete()
-                .eq("id", userId);
-            if (error) throw error;
+            if (error) throw new Error(error.message);
+            if (data?.error) throw new Error(data.error);
+            return data;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["users"] });
