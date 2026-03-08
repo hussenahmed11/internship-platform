@@ -75,21 +75,6 @@ export default function Auth() {
               Students sign in with Google. Staff accounts are created by administrators. One secure, institutional platform.
             </p>
 
-            {/* Stats */}
-            <div className="flex gap-8 pt-8">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white">500+</div>
-                <div className="text-sm text-white/60">Companies</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white">10K+</div>
-                <div className="text-sm text-white/60">Students</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white">95%</div>
-                <div className="text-sm text-white/60">Placement Rate</div>
-              </div>
-            </div>
           </div>
         </div>
 
