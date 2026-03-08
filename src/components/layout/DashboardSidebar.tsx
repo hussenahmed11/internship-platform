@@ -43,7 +43,7 @@ interface NavItem {
 const studentNavItems: NavItem[] = [
   { title: "Dashboard", url: "/student/dashboard", icon: LayoutDashboard },
   { title: "Browse Internships", url: "/internships", icon: Briefcase },
-  { title: "My Applications", url: "/applications", icon: ClipboardList },
+  { title: "My Applications", url: "/student/applications", icon: ClipboardList },
   { title: "Documents", url: "/documents", icon: FolderOpen },
   { title: "Messages", url: "/messages", icon: MessageSquare },
   { title: "Schedule", url: "/schedule", icon: Calendar },
