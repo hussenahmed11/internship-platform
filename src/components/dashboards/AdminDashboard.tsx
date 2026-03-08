@@ -8,19 +8,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
 import { useSystemHealth } from "@/hooks/useSystemHealth";
 import {
-  Users,
-  Building2,
-  GraduationCap,
-  Briefcase,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  Settings,
-  BarChart3,
-  ShieldAlert,
-  UserX,
-  FileWarning,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, AreaChart, Area,
+} from "recharts";
+import {
+  Users, Building2, GraduationCap, Briefcase,
+  AlertCircle, CheckCircle, Clock, Settings,
+  BarChart3, ShieldAlert, UserX, FileWarning,
 } from "lucide-react";
+
+const COLORS = ["#8B5CF6", "#10B981", "#F59E0B", "#3B82F6", "#EF4444"];
 
 export function AdminDashboard() {
   const navigate = useNavigate();
@@ -41,7 +38,6 @@ export function AdminDashboard() {
         supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "student"),
         supabase.from("internships").select("*", { count: "exact", head: true }).eq("status", "active"),
       ]);
-
       return {
         totalUsers: totalUsers || 0,
         activeCompanies: activeCompanies || 0,
@@ -74,7 +70,65 @@ export function AdminDashboard() {
     staleTime: 2 * 60 * 1000,
   });
 
-  // Fetch recent activity
+  // User growth by role (for pie chart)
+  const { data: roleDistribution } = useQuery({
+    queryKey: ["admin-role-distribution"],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("role");
+      if (!data) return [];
+      const counts: Record<string, number> = {};
+      data.forEach((p) => { counts[p.role] = (counts[p.role] || 0) + 1; });
+      return Object.entries(counts).map(([name, value]) => ({
+        name: name.charAt(0).toUpperCase() + name.slice(1),
+        value,
+      }));
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Application funnel
+  const { data: appFunnel } = useQuery({
+    queryKey: ["admin-app-funnel"],
+    queryFn: async () => {
+      const { data } = await supabase.from("applications").select("status");
+      if (!data) return [];
+      const counts: Record<string, number> = {};
+      data.forEach((a) => { counts[a.status || "applied"] = (counts[a.status || "applied"] || 0) + 1; });
+      const order = ["applied", "interview", "waiting", "accepted", "rejected"];
+      return order.map((s) => ({
+        stage: s.charAt(0).toUpperCase() + s.slice(1),
+        count: counts[s] || 0,
+      }));
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Internship status breakdown
+  const { data: internshipStatus } = useQuery({
+    queryKey: ["admin-internship-status"],
+    queryFn: async () => {
+      const { data } = await supabase.from("internships").select("status, created_at");
+      if (!data) return [];
+
+      // Group by month
+      const months: Record<string, Record<string, number>> = {};
+      data.forEach((i) => {
+        const month = new Date(i.created_at).toLocaleDateString("en-US", { month: "short" });
+        if (!months[month]) months[month] = {};
+        months[month][i.status || "draft"] = (months[month][i.status || "draft"] || 0) + 1;
+      });
+      return Object.entries(months).map(([month, statuses]) => ({
+        month,
+        active: statuses.active || 0,
+        draft: statuses.draft || 0,
+        closed: statuses.closed || 0,
+        filled: statuses.filled || 0,
+      }));
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Recent activity
   const { data: recentActivity, isLoading: activityLoading } = useQuery({
     queryKey: ["admin-recent-activity"],
     queryFn: async () => {
@@ -86,36 +140,27 @@ export function AdminDashboard() {
 
       const { data: recentApps } = await supabase
         .from("applications")
-        .select(`
-          status, applied_at,
-          students (
-            profiles (full_name)
-          ),
-          internships (title)
-        `)
+        .select(`status, applied_at, students (profiles (full_name)), internships (title)`)
         .order("applied_at", { ascending: false })
         .limit(3);
 
       const activities: { action: string; entity: string; time: string; status: string }[] = [];
-
-      recentUsers?.forEach(u => {
+      recentUsers?.forEach((u) => {
         activities.push({
           action: `New ${u.role} registered`,
           entity: u.full_name || u.email,
           time: formatTimeAgo(u.created_at),
-          status: "completed"
+          status: "completed",
         });
       });
-
-      recentApps?.forEach(a => {
+      recentApps?.forEach((a) => {
         activities.push({
           action: `Application ${a.status}`,
           entity: `${(a.students as any)?.profiles?.full_name || "Student"} → ${(a.internships as any)?.title || "Internship"}`,
           time: formatTimeAgo(a.applied_at),
-          status: a.status === "accepted" ? "completed" : "pending"
+          status: a.status === "accepted" ? "completed" : "pending",
         });
       });
-
       return activities.slice(0, 5);
     },
     staleTime: 60 * 1000,
@@ -138,27 +183,9 @@ export function AdminDashboard() {
   ];
 
   const pendingItems = [
-    {
-      label: "Unverified Companies",
-      count: pending?.unverifiedCompanies || 0,
-      icon: ShieldAlert,
-      path: "/companies",
-      color: "text-yellow-600",
-    },
-    {
-      label: "Pending Applications",
-      count: pending?.pendingApplications || 0,
-      icon: FileWarning,
-      path: "/internships",
-      color: "text-orange-600",
-    },
-    {
-      label: "Incomplete Onboarding",
-      count: pending?.incompleteOnboarding || 0,
-      icon: UserX,
-      path: "/users",
-      color: "text-red-600",
-    },
+    { label: "Unverified Companies", count: pending?.unverifiedCompanies || 0, icon: ShieldAlert, path: "/companies", color: "text-yellow-600" },
+    { label: "Pending Applications", count: pending?.pendingApplications || 0, icon: FileWarning, path: "/internships", color: "text-orange-600" },
+    { label: "Incomplete Onboarding", count: pending?.incompleteOnboarding || 0, icon: UserX, path: "/users", color: "text-red-600" },
   ];
 
   const totalPending = pendingItems.reduce((s, i) => s + i.count, 0);
@@ -192,11 +219,7 @@ export function AdminDashboard() {
               <stat.icon className={`h-5 w-5 ${stat.color}`} />
             </CardHeader>
             <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <div className="text-2xl font-bold">{stat.value?.toLocaleString()}</div>
-              )}
+              {isLoading ? <Skeleton className="h-8 w-20" /> : <div className="text-2xl font-bold">{stat.value?.toLocaleString()}</div>}
             </CardContent>
           </Card>
         ))}
@@ -210,24 +233,16 @@ export function AdminDashboard() {
               <CardTitle>Pending Actions</CardTitle>
               <CardDescription>Items requiring your attention</CardDescription>
             </div>
-            {!pendingLoading && totalPending > 0 && (
-              <Badge variant="destructive">{totalPending} pending</Badge>
-            )}
+            {!pendingLoading && totalPending > 0 && <Badge variant="destructive">{totalPending} pending</Badge>}
           </div>
         </CardHeader>
         <CardContent>
           {pendingLoading ? (
-            <div className="grid gap-4 md:grid-cols-3">
-              {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20" />)}
-            </div>
+            <div className="grid gap-4 md:grid-cols-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20" />)}</div>
           ) : (
             <div className="grid gap-4 md:grid-cols-3">
               {pendingItems.map((item) => (
-                <button
-                  key={item.label}
-                  onClick={() => navigate(item.path)}
-                  className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors text-left"
-                >
+                <button key={item.label} onClick={() => navigate(item.path)} className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors text-left">
                   <item.icon className={`h-8 w-8 ${item.color}`} />
                   <div>
                     <p className="text-2xl font-bold">{item.count}</p>
@@ -236,6 +251,97 @@ export function AdminDashboard() {
                 </button>
               ))}
             </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Charts Row */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* User Distribution Pie */}
+        <Card>
+          <CardHeader>
+            <CardTitle>User Distribution</CardTitle>
+            <CardDescription>Breakdown by role</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[250px]">
+            {!roleDistribution ? (
+              <Skeleton className="h-full w-full" />
+            ) : (
+              <div className="flex h-full">
+                <div className="flex-1">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={roleDistribution} cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={4} dataKey="value">
+                        {roleDistribution.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex flex-col justify-center gap-2 pl-4">
+                  {roleDistribution.map((entry, index) => (
+                    <div key={entry.name} className="flex items-center gap-2 text-sm">
+                      <div className="h-3 w-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                      <span className="text-muted-foreground">{entry.name}</span>
+                      <span className="font-medium">{entry.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Application Funnel */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Application Pipeline</CardTitle>
+            <CardDescription>Application status funnel</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[250px]">
+            {!appFunnel ? (
+              <Skeleton className="h-full w-full" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={appFunnel}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="stage" fontSize={12} />
+                  <YAxis fontSize={12} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Internship Lifecycle */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Internship Lifecycle</CardTitle>
+          <CardDescription>Posting trends by status over time</CardDescription>
+        </CardHeader>
+        <CardContent className="h-[280px]">
+          {!internshipStatus ? (
+            <Skeleton className="h-full w-full" />
+          ) : internshipStatus.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-muted-foreground text-sm">No internship data yet</div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={internshipStatus}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" fontSize={12} />
+                <YAxis fontSize={12} />
+                <Tooltip />
+                <Area type="monotone" dataKey="active" stackId="1" stroke="#10B981" fill="#10B981" fillOpacity={0.6} />
+                <Area type="monotone" dataKey="draft" stackId="1" stroke="#F59E0B" fill="#F59E0B" fillOpacity={0.6} />
+                <Area type="monotone" dataKey="closed" stackId="1" stroke="#6B7280" fill="#6B7280" fillOpacity={0.4} />
+                <Area type="monotone" dataKey="filled" stackId="1" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.6} />
+              </AreaChart>
+            </ResponsiveContainer>
           )}
         </CardContent>
       </Card>
@@ -270,9 +376,7 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             {activityLoading ? (
-              <div className="space-y-4">
-                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
-              </div>
+              <div className="space-y-4">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
             ) : !recentActivity?.length ? (
               <p className="text-sm text-muted-foreground text-center py-8">No recent activity</p>
             ) : (
@@ -280,11 +384,7 @@ export function AdminDashboard() {
                 {recentActivity.map((activity, index) => (
                   <div key={index} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
                     <div className="flex items-center gap-3">
-                      {activity.status === "completed" ? (
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <Clock className="h-4 w-4 text-yellow-600" />
-                      )}
+                      {activity.status === "completed" ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Clock className="h-4 w-4 text-yellow-600" />}
                       <div>
                         <p className="text-sm font-medium">{activity.action}</p>
                         <p className="text-xs text-muted-foreground">{activity.entity}</p>
@@ -308,39 +408,23 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             {healthLoading ? (
-              <div className="space-y-4">
-                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
-              </div>
+              <div className="space-y-4">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}</div>
             ) : (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <StatusIcon status={health?.database?.status} />
-                    <span className="text-sm">Database Connection</span>
+                {[
+                  { label: "Database Connection", status: health?.database?.status },
+                  { label: "Authentication Service", status: health?.authentication?.status },
+                  { label: "Applications Engine", status: health?.applications?.status },
+                  { label: "Internships Service", status: health?.internships?.status },
+                ].map((svc) => (
+                  <div key={svc.label} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <StatusIcon status={svc.status} />
+                      <span className="text-sm">{svc.label}</span>
+                    </div>
+                    {getHealthBadge(svc.status)}
                   </div>
-                  {getHealthBadge(health?.database?.status)}
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <StatusIcon status={health?.authentication?.status} />
-                    <span className="text-sm">Authentication Service</span>
-                  </div>
-                  {getHealthBadge(health?.authentication?.status)}
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <StatusIcon status={health?.applications?.status} />
-                    <span className="text-sm">Applications Engine</span>
-                  </div>
-                  {getHealthBadge(health?.applications?.status)}
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <StatusIcon status={health?.internships?.status} />
-                    <span className="text-sm">Internships Service</span>
-                  </div>
-                  {getHealthBadge(health?.internships?.status)}
-                </div>
+                ))}
               </div>
             )}
           </CardContent>
