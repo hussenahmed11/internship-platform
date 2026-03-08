@@ -597,6 +597,6 @@ export default function Departments() {
                     </DialogContent>
                 </Dialog>
             </div>
-        </DashboardLayout>
+        </div>
     );
 }
