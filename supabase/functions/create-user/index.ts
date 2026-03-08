@@ -102,12 +102,14 @@ serve(async (req) => {
       );
     }
 
-    // Create user in Supabase Auth
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true, // Auto-confirm email
-      user_metadata: { full_name },
+      user_metadata: {
+        full_name,
+        role,
+      },
     });
 
     if (authError) {
@@ -119,82 +121,90 @@ serve(async (req) => {
 
     const newUser = authData.user;
 
-    // Create profile record
-    const { error: profileError } = await supabaseAdmin
+    // Upsert profile because auth trigger may have pre-created it
+    const { data: profileData, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .insert({
-        user_id: newUser.id,
-        email: email,
-        full_name: full_name,
-        role: role,
-        department_id: department_id || null,
-        phone: phone || null,
-        onboarding_completed: false,
-      });
+      .upsert(
+        {
+          user_id: newUser.id,
+          email,
+          full_name,
+          role,
+          department_id: department_id || null,
+          phone: phone || null,
+          onboarding_completed: false,
+        },
+        {
+          onConflict: "user_id",
+          ignoreDuplicates: false,
+        }
+      )
+      .select("id")
+      .single();
 
-    if (profileError) {
-      // Rollback: delete the auth user if profile creation fails
+    if (profileError || !profileData) {
+      // Rollback: delete the auth user if profile upsert fails
       await supabaseAdmin.auth.admin.deleteUser(newUser.id);
       return new Response(
-        JSON.stringify({ error: `Failed to create profile: ${profileError.message}` }),
+        JSON.stringify({ error: `Failed to create profile: ${profileError?.message || "Unknown profile error"}` }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Add to user_roles table
+    // Ensure role mapping exists
     const { error: userRoleError } = await supabaseAdmin
       .from("user_roles")
-      .insert({
-        user_id: newUser.id,
-        role: role,
-      });
+      .upsert(
+        {
+          user_id: newUser.id,
+          role,
+        },
+        {
+          onConflict: "user_id,role",
+          ignoreDuplicates: true,
+        }
+      );
 
     if (userRoleError) {
       console.error("Warning: Failed to add user role:", userRoleError.message);
       // Don't rollback for this, profile is source of truth
     }
 
-    // Create role-specific records
+    // Create role-specific records idempotently
     if (role === "student") {
-      const { data: profileData } = await supabaseAdmin
-        .from("profiles")
-        .select("id")
-        .eq("user_id", newUser.id)
-        .single();
-
-      if (profileData) {
-        await supabaseAdmin.from("students").insert({
+      await supabaseAdmin.from("students").upsert(
+        {
           profile_id: profileData.id,
           student_id: `STU${Date.now().toString().slice(-8)}`,
-        });
-      }
+        },
+        {
+          onConflict: "profile_id",
+          ignoreDuplicates: true,
+        }
+      );
     } else if (role === "company") {
-      const { data: profileData } = await supabaseAdmin
-        .from("profiles")
-        .select("id")
-        .eq("user_id", newUser.id)
-        .single();
-
-      if (profileData) {
-        await supabaseAdmin.from("companies").insert({
+      await supabaseAdmin.from("companies").upsert(
+        {
           profile_id: profileData.id,
           company_name: full_name,
           verified: false,
-        });
-      }
+        },
+        {
+          onConflict: "profile_id",
+          ignoreDuplicates: true,
+        }
+      );
     } else if (role === "advisor" || role === "coordinator") {
-      const { data: profileData } = await supabaseAdmin
-        .from("profiles")
-        .select("id")
-        .eq("user_id", newUser.id)
-        .single();
-
-      if (profileData) {
-        await supabaseAdmin.from("faculty").insert({
+      await supabaseAdmin.from("faculty").upsert(
+        {
           profile_id: profileData.id,
           title: role === "coordinator" ? "Department Coordinator" : "Academic Advisor",
-        });
-      }
+        },
+        {
+          onConflict: "profile_id",
+          ignoreDuplicates: true,
+        }
+      );
     }
 
     return new Response(
