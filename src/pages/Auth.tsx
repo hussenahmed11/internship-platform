@@ -72,7 +72,7 @@ export default function Auth() {
             </h1>
             
             <p className="text-lg text-white/70 max-w-md leading-relaxed">
-              Connect students with companies, track applications, and manage placements - all in one secure, institutional platform.
+              Students sign in with Google. Staff accounts are created by administrators. One secure, institutional platform.
             </p>
 
             {/* Stats */}
