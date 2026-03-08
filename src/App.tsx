@@ -79,6 +79,7 @@ const App = () => (
 
             {/* Shared protected routes */}
             <Route path="/internships" element={<ProtectedRoute><DashboardLayout><Internships /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/student/applications" element={<ProtectedRoute allowedRoles={["student"]}><DashboardLayout><MyApplications /></DashboardLayout></ProtectedRoute>} />
             <Route path="/applications" element={<ProtectedRoute><DashboardLayout><EmployerApplications /></DashboardLayout></ProtectedRoute>} />
             <Route path="/messages" element={<ProtectedRoute><DashboardLayout><Messages /></DashboardLayout></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute allowedRoles={["admin", "coordinator"]}><DashboardLayout><Analytics /></DashboardLayout></ProtectedRoute>} />
