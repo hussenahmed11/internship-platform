@@ -25,6 +25,8 @@ import MyListings from "./pages/MyListings";
 import EmployerApplications from "./pages/EmployerApplications";
 import Interviews from "./pages/Interviews";
 import Messages from "./pages/Messages";
+import StudentDirectory from "./pages/StudentDirectory";
+import Approvals from "./pages/Approvals";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { StudentDashboard } from "@/components/dashboards/StudentDashboard";
 import { CompanyDashboard } from "@/components/dashboards/CompanyDashboard";
@@ -70,6 +72,10 @@ const App = () => (
             <Route path="/listings" element={<ProtectedRoute allowedRoles={["company"]}><DashboardLayout><MyListings /></DashboardLayout></ProtectedRoute>} />
             <Route path="/interviews" element={<ProtectedRoute allowedRoles={["company"]}><DashboardLayout><Interviews /></DashboardLayout></ProtectedRoute>} />
 
+            {/* Coordinator / shared routes */}
+            <Route path="/students" element={<ProtectedRoute allowedRoles={["coordinator", "admin"]}><DashboardLayout><StudentDirectory /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/approvals" element={<ProtectedRoute allowedRoles={["advisor", "coordinator"]}><DashboardLayout><Approvals /></DashboardLayout></ProtectedRoute>} />
+
             {/* Shared protected routes */}
             <Route path="/internships" element={<ProtectedRoute><DashboardLayout><Internships /></DashboardLayout></ProtectedRoute>} />
             <Route path="/applications" element={<ProtectedRoute><DashboardLayout><EmployerApplications /></DashboardLayout></ProtectedRoute>} />
@@ -83,9 +89,7 @@ const App = () => (
             <Route path="/reports" element={<ProtectedRoute allowedRoles={["admin", "coordinator"]}><DashboardLayout><FeaturePlaceholder title="System Reports" /></DashboardLayout></ProtectedRoute>} />
             <Route path="/schedule" element={<ProtectedRoute><DashboardLayout><FeaturePlaceholder title="Calendar & Scheduling" /></DashboardLayout></ProtectedRoute>} />
             <Route path="/advisees" element={<ProtectedRoute allowedRoles={["advisor"]}><DashboardLayout><FeaturePlaceholder title="Advisee Monitoring" /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/approvals" element={<ProtectedRoute allowedRoles={["advisor", "coordinator"]}><DashboardLayout><FeaturePlaceholder title="Approval Workflow" /></DashboardLayout></ProtectedRoute>} />
             <Route path="/evaluations" element={<ProtectedRoute allowedRoles={["advisor"]}><DashboardLayout><FeaturePlaceholder title="Evaluation System" /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/students" element={<ProtectedRoute allowedRoles={["coordinator", "admin"]}><DashboardLayout><FeaturePlaceholder title="Student Directory" /></DashboardLayout></ProtectedRoute>} />
 
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />

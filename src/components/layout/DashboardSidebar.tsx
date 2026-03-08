@@ -73,6 +73,7 @@ const coordinatorNavItems: NavItem[] = [
   { title: "Companies", url: "/companies", icon: Building2 },
   { title: "Internships", url: "/internships", icon: Briefcase },
   { title: "Approvals", url: "/approvals", icon: CheckSquare },
+  { title: "Documents", url: "/documents", icon: FolderOpen },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Messages", url: "/messages", icon: MessageSquare },
 ];
