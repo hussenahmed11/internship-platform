@@ -752,6 +752,5 @@ export default function Users() {
                     </DialogContent>
                 </Dialog>
             </div>
-        </DashboardLayout>
     );
 }

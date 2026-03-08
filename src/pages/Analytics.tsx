@@ -448,6 +448,5 @@ export default function Analytics() {
                     </Card>
                 )}
             </div>
-        </DashboardLayout>
     );
 }
