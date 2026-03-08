@@ -97,14 +97,14 @@ export default function Onboarding() {
 
       // Create role-specific record
       if (profile.role === "student") {
-        const { error: studentError } = await supabase.from("students").insert({
+        const { error: studentError } = await supabase.from("students").upsert({
           profile_id: profile.id,
           student_id: formData.student_id,
           major: formData.major,
           graduation_year: formData.graduation_year ? parseInt(formData.graduation_year) : null,
           bio: formData.bio,
           skills: formData.skills ? formData.skills.split(",").map((s) => s.trim()) : [],
-        });
+        }, { onConflict: "profile_id" });
 
         if (studentError) throw studentError;
       } else if (profile.role === "company") {
