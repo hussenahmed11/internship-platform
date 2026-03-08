@@ -58,10 +58,6 @@ export default function Auth() {
         {/* Main Content */}
         <div className="relative z-10 flex flex-col justify-center px-16">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-3 glass-dark px-4 py-2 rounded-full">
-              <GraduationCap className="h-5 w-5 text-white" />
-              <span className="text-white/90 text-sm font-medium">University-Grade Platform</span>
-            </div>
             
             <h1 className="text-5xl font-bold text-white leading-tight">
               Internship
