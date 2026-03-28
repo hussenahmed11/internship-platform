@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useState } from "react";
+import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
+import { SyncUsersButton } from "@/components/admin/SyncUsersButton";
 
 interface User {
     id: string;
@@ -44,17 +46,10 @@ export default function Users() {
     const [roleFilter, setRoleFilter] = useState<string>("all");
     const [departmentFilter, setDepartmentFilter] = useState<string>("all");
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-    const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [editFormData, setEditFormData] = useState({
         full_name: "",
         role: "",
-        department_id: ""
-    });
-    const [inviteFormData, setInviteFormData] = useState({
-        email: "",
-        full_name: "",
-        role: "student",
         department_id: ""
     });
 
@@ -75,7 +70,10 @@ export default function Users() {
                 .order("created_at", { ascending: false });
             if (error) throw error;
             return data as User[];
-        }
+        },
+        staleTime: 0,
+        refetchOnMount: true,
+        refetchOnWindowFocus: true
     });
 
     // Fetch departments for filters
@@ -91,44 +89,7 @@ export default function Users() {
         }
     });
 
-    // Invite user mutation - uses edge function to properly create auth user + profile
-    const inviteUserMutation = useMutation({
-        mutationFn: async (inviteData: { email: string; full_name: string; role: string; department_id: string; password?: string }) => {
-            // Generate a temporary password if not provided
-            const password = inviteData.password || `Temp${Math.random().toString(36).slice(-8)}!1`;
-            
-            const { data, error } = await supabase.functions.invoke("create-user", {
-                body: {
-                    email: inviteData.email,
-                    password: password,
-                    full_name: inviteData.full_name,
-                    role: inviteData.role,
-                    department_id: inviteData.department_id || undefined,
-                },
-            });
 
-            if (error) throw new Error(error.message);
-            if (data?.error) throw new Error(data.error);
-            
-            return { ...data, tempPassword: password };
-        },
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ["users"] });
-            toast.success(`User created! Temporary password: ${data.tempPassword}`, {
-                duration: 10000,
-            });
-            setIsInviteDialogOpen(false);
-            setInviteFormData({
-                email: "",
-                full_name: "",
-                role: "student",
-                department_id: ""
-            });
-        },
-        onError: (error: any) => {
-            toast.error(error.message || "Failed to create user");
-        }
-    });
     const updateUserMutation = useMutation({
         mutationFn: async ({ id, updates }: {
             id: string;
@@ -200,22 +161,6 @@ export default function Users() {
         );
     };
 
-    const handleInviteUser = () => {
-        if (!inviteFormData.email.trim() || !inviteFormData.role) {
-            toast.error("Email and role are required");
-            return;
-        }
-
-        // Basic email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(inviteFormData.email)) {
-            toast.error("Please enter a valid email address");
-            return;
-        }
-
-        inviteUserMutation.mutate(inviteFormData);
-    };
-
     const handleEditUser = (user: User) => {
         setEditingUser(user);
         setEditFormData({
@@ -280,117 +225,9 @@ export default function Users() {
                             Oversee and manage all platform users and their permissions
                         </p>
                     </div>
-                    <div className="flex-shrink-0">
-                        <Dialog
-                            open={isInviteDialogOpen}
-                            onOpenChange={(open) => {
-                                setIsInviteDialogOpen(open);
-                                if (!open) {
-                                    setInviteFormData({
-                                        email: "",
-                                        full_name: "",
-                                        role: "student",
-                                        department_id: ""
-                                    });
-                                }
-                            }}
-                        >
-                            <DialogTrigger asChild>
-                                <Button
-                                    className="bg-sidebar-primary text-white hover:bg-sidebar-primary/90 transition-colors w-full sm:w-auto"
-                                    type="button"
-                                >
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Invite User
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-                                <DialogHeader>
-                                    <DialogTitle>Invite New User</DialogTitle>
-                                    <DialogDescription>
-                                        Send an invitation to a new user to join the platform.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-4">
-                                    <div>
-                                        <Label htmlFor="invite-email">Email Address *</Label>
-                                        <Input
-                                            id="invite-email"
-                                            type="email"
-                                            value={inviteFormData.email}
-                                            onChange={(e) => setInviteFormData({ ...inviteFormData, email: e.target.value })}
-                                            placeholder="user@university.edu"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="invite-name">Full Name</Label>
-                                        <Input
-                                            id="invite-name"
-                                            value={inviteFormData.full_name}
-                                            onChange={(e) => setInviteFormData({ ...inviteFormData, full_name: e.target.value })}
-                                            placeholder="Enter full name (optional)"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="invite-role">Role *</Label>
-                                        <Select value={inviteFormData.role} onValueChange={(value) => setInviteFormData({ ...inviteFormData, role: value })}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select role" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="student">Student</SelectItem>
-                                                <SelectItem value="company">Company</SelectItem>
-                                                <SelectItem value="advisor">Advisor</SelectItem>
-                                                <SelectItem value="coordinator">Coordinator</SelectItem>
-                                                <SelectItem value="admin">Admin</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="invite-department">Department</Label>
-                                        <Select value={inviteFormData.department_id || "none"} onValueChange={(value) => setInviteFormData({ ...inviteFormData, department_id: value === "none" ? "" : value })}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select department (optional)" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="none">No Department</SelectItem>
-                                                {departments?.map((dept) => (
-                                                    <SelectItem key={dept.id} value={dept.id}>
-                                                        {dept.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                                        <div className="flex items-start gap-2">
-                                            <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5" />
-                                            <div className="text-sm text-blue-800">
-                                                <p className="font-medium">Note:</p>
-                                                <p>The user will need to complete the signup process using this email address to activate their account.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <DialogFooter>
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => {
-                                            setIsInviteDialogOpen(false);
-                                        }}
-                                        disabled={inviteUserMutation.isPending}
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        onClick={handleInviteUser}
-                                        disabled={inviteUserMutation.isPending}
-                                    >
-                                        {inviteUserMutation.isPending ? "Sending Invitation..." : "Send Invitation"}
-                                    </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
+                    <div className="flex-shrink-0 flex items-center gap-3">
+                        <SyncUsersButton />
+                        <CreateUserDialog />
                     </div>
                 </div>
 

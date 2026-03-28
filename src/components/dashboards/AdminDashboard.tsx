@@ -6,7 +6,9 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
+import { SyncUsersButton } from "@/components/admin/SyncUsersButton";
 import { useSystemHealth } from "@/hooks/useSystemHealth";
+import { useUserSyncStatus } from "@/hooks/useUserSyncStatus";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, AreaChart, Area,
@@ -15,6 +17,7 @@ import {
   Users, Building2, GraduationCap, Briefcase,
   AlertCircle, CheckCircle, Clock, Settings,
   BarChart3, ShieldAlert, UserX, FileWarning,
+  Database, RefreshCw,
 } from "lucide-react";
 
 const COLORS = ["#8B5CF6", "#10B981", "#F59E0B", "#3B82F6", "#EF4444"];
@@ -22,59 +25,121 @@ const COLORS = ["#8B5CF6", "#10B981", "#F59E0B", "#3B82F6", "#EF4444"];
 export function AdminDashboard() {
   const navigate = useNavigate();
   const { data: health, isLoading: healthLoading } = useSystemHealth();
+  const { data: syncStatus, isLoading: syncStatusLoading } = useUserSyncStatus();
 
-  // Fetch real stats
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  // Fetch real stats using RPC function (bypasses RLS for accurate counts)
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery({
     queryKey: ["admin-dashboard-stats"],
     queryFn: async () => {
-      const [
-        { count: totalUsers },
-        { count: activeCompanies },
-        { count: students },
-        { count: activeInternships },
-      ] = await Promise.all([
-        supabase.from("profiles").select("*", { count: "exact", head: true }),
-        supabase.from("companies").select("*", { count: "exact", head: true }).eq("verified", true),
-        supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "student"),
-        supabase.from("internships").select("*", { count: "exact", head: true }).eq("status", "active"),
-      ]);
-      return {
-        totalUsers: totalUsers || 0,
-        activeCompanies: activeCompanies || 0,
-        students: students || 0,
-        activeInternships: activeInternships || 0,
-      };
+      try {
+        // Try RPC function first (bypasses RLS)
+        // Use the typed RPC function
+        const { data: rpcData, error: rpcError } = await supabase.rpc("get_admin_dashboard_stats");
+        
+        if (!rpcError && rpcData) {
+          const statsData = rpcData;
+          return {
+            totalUsers: statsData.totalUsers || 0,
+            activeCompanies: statsData.activeCompanies || 0,
+            students: statsData.students || 0,
+            activeInternships: statsData.activeInternships || 0,
+          };
+        }
+        
+        // Fallback to direct queries if RPC fails
+        console.warn("RPC function not available, falling back to direct queries:", rpcError);
+        const [
+          { count: totalUsers, error: usersError },
+          { count: activeCompanies, error: companiesError },
+          { count: students, error: studentsError },
+          { count: activeInternships, error: internshipsError },
+        ] = await Promise.all([
+          supabase.from("profiles").select("*", { count: "exact", head: true }),
+          supabase.from("companies").select("*", { count: "exact", head: true }).eq("verified", true),
+          supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "student"),
+          supabase.from("internships").select("*", { count: "exact", head: true }).eq("status", "active"),
+        ]);
+
+        if (usersError) console.error("Error fetching users:", usersError);
+        if (companiesError) console.error("Error fetching companies:", companiesError);
+        if (studentsError) console.error("Error fetching students:", studentsError);
+        if (internshipsError) console.error("Error fetching internships:", internshipsError);
+
+        return {
+          totalUsers: totalUsers || 0,
+          activeCompanies: activeCompanies || 0,
+          students: students || 0,
+          activeInternships: activeInternships || 0,
+        };
+      } catch (error) {
+        console.error("Failed to fetch dashboard stats:", error);
+        throw error;
+      }
     },
     staleTime: 0, // Disable cache to always fetch fresh data
     refetchOnMount: true,
   });
 
-  // Pending actions
-  const { data: pending, isLoading: pendingLoading } = useQuery({
+  // Pending actions - also try RPC first
+  const { data: pending, isLoading: pendingLoading, error: pendingError } = useQuery({
     queryKey: ["admin-pending-actions"],
     queryFn: async () => {
-      const [
-        { count: unverifiedCompanies },
-        { count: pendingApplications },
-        { count: incompleteOnboarding },
-      ] = await Promise.all([
-        supabase.from("companies").select("*", { count: "exact", head: true }).eq("verified", false),
-        supabase.from("applications").select("*", { count: "exact", head: true }).eq("status", "applied"),
-        supabase.from("profiles").select("*", { count: "exact", head: true }).eq("onboarding_completed", false),
-      ]);
-      return {
-        unverifiedCompanies: unverifiedCompanies || 0,
-        pendingApplications: pendingApplications || 0,
-        incompleteOnboarding: incompleteOnboarding || 0,
-      };
+      try {
+        // Try RPC function first
+        const { data: rpcData, error: rpcError } = await supabase.rpc("get_admin_dashboard_stats");
+        
+        if (!rpcError && rpcData) {
+          const statsData = rpcData;
+          return {
+            unverifiedCompanies: statsData.unverifiedCompanies || 0,
+            pendingApplications: statsData.pendingApplications || 0,
+            incompleteOnboarding: statsData.incompleteOnboarding || 0,
+          };
+        }
+        
+        // Fallback to direct queries
+        const [
+          { count: unverifiedCompanies, error: unverifiedError },
+          { count: pendingApplications, error: applicationsError },
+          { count: incompleteOnboarding, error: onboardingError },
+        ] = await Promise.all([
+          supabase.from("companies").select("*", { count: "exact", head: true }).eq("verified", false),
+          supabase.from("applications").select("*", { count: "exact", head: true }).eq("status", "applied"),
+          supabase.from("profiles").select("*", { count: "exact", head: true }).eq("onboarding_completed", false),
+        ]);
+
+        if (unverifiedError) console.error("Error fetching unverified companies:", unverifiedError);
+        if (applicationsError) console.error("Error fetching pending applications:", applicationsError);
+        if (onboardingError) console.error("Error fetching incomplete onboarding:", onboardingError);
+
+        return {
+          unverifiedCompanies: unverifiedCompanies || 0,
+          pendingApplications: pendingApplications || 0,
+          incompleteOnboarding: incompleteOnboarding || 0,
+        };
+      } catch (error) {
+        console.error("Failed to fetch pending actions:", error);
+        throw error;
+      }
     },
     staleTime: 2 * 60 * 1000,
   });
 
-  // User growth by role (for pie chart)
+  // User growth by role (for pie chart) - try RPC first
   const { data: roleDistribution } = useQuery({
     queryKey: ["admin-role-distribution"],
     queryFn: async () => {
+      // Try RPC function first
+      const { data: rpcData, error: rpcError } = await supabase.rpc("get_role_distribution");
+      
+      if (!rpcError && rpcData && Array.isArray(rpcData)) {
+        return rpcData.map(item => ({
+          name: item.role.charAt(0).toUpperCase() + item.role.slice(1),
+          value: item.count,
+        }));
+      }
+      
+      // Fallback to direct query
       const { data } = await supabase.from("profiles").select("role");
       if (!data) return [];
       const counts: Record<string, number> = {};
@@ -208,8 +273,31 @@ export function AdminDashboard() {
           <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
           <p className="text-muted-foreground mt-1">System overview and management</p>
         </div>
-        <CreateUserDialog />
+        <div className="flex items-center gap-3">
+          <SyncUsersButton />
+          <CreateUserDialog />
+        </div>
       </div>
+
+      {/* Error Display */}
+      {(statsError || pendingError) && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-red-900">Error loading dashboard data</h3>
+                <p className="text-sm text-red-700 mt-1">
+                  There was a problem fetching data from the database. Please check your connection and try refreshing the page.
+                </p>
+                {(statsError as Error)?.message && (
+                  <p className="text-xs text-red-600 mt-2 font-mono">{(statsError as Error).message}</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -226,6 +314,39 @@ export function AdminDashboard() {
         ))}
       </div>
 
+      {/* Sync Status Alert */}
+      {!syncStatusLoading && syncStatus && syncStatus.missingProfiles > 0 && (
+        <Card className="border-yellow-200 bg-yellow-50">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <RefreshCw className="h-5 w-5 text-yellow-600 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-semibold text-yellow-900">Users Out of Sync</h3>
+                <p className="text-sm text-yellow-700 mt-1">
+                  {syncStatus.missingProfiles} authentication {syncStatus.missingProfiles === 1 ? 'user' : 'users'} {syncStatus.missingProfiles === 1 ? 'is' : 'are'} not synced with the profiles table.
+                  Click "Sync Users" to synchronize them.
+                </p>
+                <div className="flex items-center gap-4 mt-3 text-sm">
+                  <div>
+                    <span className="text-yellow-900 font-medium">Auth Users:</span>{" "}
+                    <span className="text-yellow-700">{syncStatus.authUsers}</span>
+                  </div>
+                  <div>
+                    <span className="text-yellow-900 font-medium">Profiles:</span>{" "}
+                    <span className="text-yellow-700">{syncStatus.profiles}</span>
+                  </div>
+                  <div>
+                    <span className="text-yellow-900 font-medium">Missing:</span>{" "}
+                    <span className="text-yellow-700 font-bold">{syncStatus.missingProfiles}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Empty State - No Data */}
       {/* Pending Actions */}
       <Card>
         <CardHeader className="pb-3">

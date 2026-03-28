@@ -40,9 +40,16 @@ export function ProtectedRoute({
       return;
     }
 
-    // Check if onboarding is needed
+    // CRITICAL: Check if onboarding is needed (except on onboarding page itself)
     if (profile && !profile.onboarding_completed && !location.pathname.startsWith("/onboarding")) {
       navigate("/onboarding", { replace: true });
+      return;
+    }
+
+    // If on onboarding page but already completed, redirect to dashboard
+    if (profile && profile.onboarding_completed && location.pathname.startsWith("/onboarding")) {
+      const dashboardPath = getDashboardPath(profile.role);
+      navigate(dashboardPath, { replace: true });
       return;
     }
   }, [user, profile, loading, allowedRoles, navigate, location, requireAuth]);

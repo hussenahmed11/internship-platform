@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { GraduationCap, Building2, BookOpen, Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
+import { GraduationCap, Building2, BookOpen, Loader2, ArrowRight, CheckCircle2, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Department {
@@ -18,12 +18,20 @@ interface Department {
   code: string;
 }
 
+interface ValidationErrors {
+  [key: string]: string;
+}
+
 export default function Onboarding() {
   const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [errors, setErrors] = useState<ValidationErrors>({});
+  
+  // Admin users skip to step 2 automatically (they don't need step 2 form)
+  const totalSteps = profile?.role === "admin" ? 1 : 2;
   
   // Form data
   const [formData, setFormData] = useState({
@@ -75,25 +83,79 @@ export default function Onboarding() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error when user types
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  // Validate form data based on current step and role
+  const validateStep = (currentStep: number): boolean => {
+    const newErrors: ValidationErrors = {};
+
+    if (currentStep === 1) {
+      // Step 1 is optional - no required fields
+    }
+
+    if (currentStep === 2 && profile) {
+      if (profile.role === "student") {
+        if (!formData.student_id.trim()) {
+          newErrors.student_id = "Student ID is required";
+        }
+        if (!formData.major.trim()) {
+          newErrors.major = "Major is required";
+        }
+      } else if (profile.role === "company") {
+        if (!formData.company_name.trim()) {
+          newErrors.company_name = "Company name is required";
+        }
+        if (!formData.industry.trim()) {
+          newErrors.industry = "Industry is required";
+        }
+      } else if (profile.role === "advisor" || profile.role === "coordinator") {
+        if (!formData.title.trim()) {
+          newErrors.title = "Title is required";
+        }
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleNextStep = () => {
+    if (validateStep(step)) {
+      setStep(step + 1);
+    } else {
+      toast.error("Please fill in all required fields");
+    }
   };
 
   const handleSubmit = async () => {
     if (!user || !profile) return;
 
+    // Validate final step before submission
+    if (!validateStep(step)) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // Update profile with department
+      // Update profile with department and mark onboarding as complete
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
-          phone: formData.phone,
+          phone: formData.phone || null,
           department_id: formData.department_id || null,
           onboarding_completed: true,
         })
         .eq("id", profile.id);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        throw profileError;
+      }
 
       // Create role-specific record
       if (profile.role === "student") {
@@ -102,43 +164,71 @@ export default function Onboarding() {
           student_id: formData.student_id,
           major: formData.major,
           graduation_year: formData.graduation_year ? parseInt(formData.graduation_year) : null,
-          bio: formData.bio,
+          bio: formData.bio || null,
           skills: formData.skills ? formData.skills.split(",").map((s) => s.trim()) : [],
         }, { onConflict: "profile_id" });
 
-        if (studentError) throw studentError;
+        if (studentError) {
+          throw studentError;
+        }
       } else if (profile.role === "company") {
         const { error: companyError } = await supabase.from("companies").upsert({
           profile_id: profile.id,
           company_name: formData.company_name,
           industry: formData.industry,
-          company_size: formData.company_size,
-          website: formData.website,
-          description: formData.description,
-          location: formData.location,
+          company_size: formData.company_size || null,
+          website: formData.website || null,
+          description: formData.description || null,
+          location: formData.location || null,
         }, { onConflict: "profile_id" });
 
-        if (companyError) throw companyError;
+        if (companyError) {
+          throw companyError;
+        }
       } else if (profile.role === "advisor" || profile.role === "coordinator") {
         const { error: facultyError } = await supabase.from("faculty").upsert({
           profile_id: profile.id,
           title: formData.title,
-          office_location: formData.office_location,
-          office_hours: formData.office_hours,
+          office_location: formData.office_location || null,
+          office_hours: formData.office_hours || null,
           specialization: formData.specialization ? formData.specialization.split(",").map((s) => s.trim()) : [],
         }, { onConflict: "profile_id" });
 
-        if (facultyError) throw facultyError;
+        if (facultyError) {
+          throw facultyError;
+        }
       }
 
+      // Refresh profile to get updated onboarding_completed status
       await refreshProfile();
+      
       toast.success("Profile completed successfully!");
-      navigate("/dashboard");
+      
+      // Navigate to appropriate dashboard
+      const dashboardPath = getDashboardPath(profile.role);
+      navigate(dashboardPath, { replace: true });
     } catch (error: any) {
-      console.error("Onboarding error:", error);
       toast.error(error.message || "Failed to complete onboarding");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Helper function to get dashboard path
+  const getDashboardPath = (role: string): string => {
+    switch (role) {
+      case "admin":
+        return "/admin/dashboard";
+      case "student":
+        return "/student/dashboard";
+      case "company":
+        return "/employer/dashboard";
+      case "advisor":
+        return "/advisor/dashboard";
+      case "coordinator":
+        return "/coordinator/dashboard";
+      default:
+        return "/dashboard";
     }
   };
 
@@ -147,36 +237,36 @@ export default function Onboarding() {
       icon: GraduationCap,
       color: "text-student",
       bgColor: "bg-student-light",
-      title: "Complete Your Student Profile",
-      description: "Help us match you with the best internship opportunities",
+      title: "Welcome! Complete Your Profile",
+      description: "This is your first login. Please complete your profile to access the system",
     },
     company: {
       icon: Building2,
       color: "text-company",
       bgColor: "bg-company-light",
-      title: "Set Up Your Company Profile",
-      description: "Tell us about your organization to attract the best interns",
+      title: "Welcome! Set Up Your Company Profile",
+      description: "This is your first login. Complete your profile to start posting internships",
     },
     advisor: {
       icon: BookOpen,
       color: "text-advisor",
       bgColor: "bg-advisor-light",
-      title: "Complete Your Advisor Profile",
-      description: "Set up your profile to start guiding students",
+      title: "Welcome! Complete Your Profile",
+      description: "This is your first login. Set up your profile to start guiding students",
     },
     coordinator: {
       icon: BookOpen,
       color: "text-coordinator",
       bgColor: "bg-coordinator-light",
-      title: "Complete Your Coordinator Profile",
-      description: "Set up your profile to manage department placements",
+      title: "Welcome! Complete Your Profile",
+      description: "This is your first login. Set up your profile to manage department placements",
     },
     admin: {
-      icon: BookOpen,
+      icon: Shield,
       color: "text-primary",
       bgColor: "bg-primary/10",
-      title: "Complete Your Admin Profile",
-      description: "Set up your admin profile to get started",
+      title: "Welcome! Complete Your Profile",
+      description: "This is your first login. Set up your admin profile to get started",
     },
   };
 
@@ -231,19 +321,23 @@ export default function Onboarding() {
                 placeholder="e.g., STU-2024-001"
                 value={formData.student_id}
                 onChange={(e) => handleInputChange("student_id", e.target.value)}
+                className={errors.student_id ? "border-red-500" : ""}
                 required
               />
+              {errors.student_id && <p className="text-sm text-red-500">{errors.student_id}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="major">Major</Label>
+                <Label htmlFor="major">Major *</Label>
                 <Input
                   id="major"
                   placeholder="e.g., Computer Science"
                   value={formData.major}
                   onChange={(e) => handleInputChange("major", e.target.value)}
+                  className={errors.major ? "border-red-500" : ""}
                 />
+                {errors.major && <p className="text-sm text-red-500">{errors.major}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="graduation_year">Graduation Year</Label>
@@ -299,19 +393,23 @@ export default function Onboarding() {
                 placeholder="e.g., TechCorp Inc."
                 value={formData.company_name}
                 onChange={(e) => handleInputChange("company_name", e.target.value)}
+                className={errors.company_name ? "border-red-500" : ""}
                 required
               />
+              {errors.company_name && <p className="text-sm text-red-500">{errors.company_name}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="industry">Industry</Label>
+                <Label htmlFor="industry">Industry *</Label>
                 <Input
                   id="industry"
                   placeholder="e.g., Technology"
                   value={formData.industry}
                   onChange={(e) => handleInputChange("industry", e.target.value)}
+                  className={errors.industry ? "border-red-500" : ""}
                 />
+                {errors.industry && <p className="text-sm text-red-500">{errors.industry}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="company_size">Company Size</Label>
@@ -373,13 +471,15 @@ export default function Onboarding() {
       return (
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">Title *</Label>
             <Input
               id="title"
               placeholder="e.g., Associate Professor"
               value={formData.title}
               onChange={(e) => handleInputChange("title", e.target.value)}
+              className={errors.title ? "border-red-500" : ""}
             />
+            {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -445,7 +545,7 @@ export default function Onboarding() {
 
           {/* Progress Steps */}
           <div className="flex items-center justify-center gap-2 mt-4">
-            {[1, 2].map((s) => (
+            {Array.from({ length: totalSteps }, (_, i) => i + 1).map((s) => (
               <div
                 key={s}
                 className={cn(
@@ -470,8 +570,8 @@ export default function Onboarding() {
                 Back
               </Button>
             )}
-            {step < 2 ? (
-              <Button onClick={() => setStep(step + 1)} className="flex-1">
+            {step < totalSteps ? (
+              <Button onClick={handleNextStep} className="flex-1">
                 Continue
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>

@@ -664,9 +664,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_admin_dashboard_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          totalUsers: number
+          students: number
+          companies: number
+          advisors: number
+          coordinators: number
+          admins: number
+          activeCompanies: number
+          activeInternships: number
+          incompleteOnboarding: number
+          unverifiedCompanies: number
+          pendingApplications: number
+        }
+      }
       get_company_applicant_student_ids: {
         Args: { _user_id: string }
         Returns: string[]
+      }
+      get_role_distribution: {
+        Args: Record<PropertyKey, never>
+        Returns: { role: string; count: number }[]
       }
       get_user_department: { Args: { _user_id: string }; Returns: string }
       get_user_profile_id: { Args: { _user_id: string }; Returns: string }
@@ -680,6 +700,14 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      sync_auth_users_to_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          success: boolean
+          syncedCount: number
+          message: string
+        }
       }
     }
     Enums: {

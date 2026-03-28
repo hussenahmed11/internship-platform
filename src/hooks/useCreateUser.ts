@@ -19,56 +19,146 @@ export function useCreateUser() {
   const createUser = async (data: CreateUserData) => {
     setLoading(true);
     try {
+      // First try the edge function
       const { data: result, error } = await supabase.functions.invoke("create-user", {
         body: data,
       });
 
       if (error) {
-        // Edge Function not deployed - show manual instructions
-        toast({
-          title: "Edge Function Not Deployed",
-          description: "Please create users manually through Supabase Dashboard. See instructions in CREATE_ADMIN_USER.md",
-          variant: "destructive",
-          duration: 10000,
+        // Edge Function not deployed - try alternative approach
+        
+        // Alternative: Create user via signUp and then update profile
+        // This works because admin can create users this way
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+          options: {
+            data: {
+              full_name: data.full_name,
+              role: data.role,
+            },
+          },
         });
-        
-        // Open instructions in console
-        console.log(`
-===========================================
-MANUAL USER CREATION REQUIRED
-===========================================
 
-The Supabase Edge Function is not deployed yet.
-Please create users manually:
+        if (signUpError) {
+          throw new Error(signUpError.message);
+        }
 
-1. Go to: https://supabase.com/dashboard/project/jubbpyoqcarnylbeslyz/auth/users
+        if (!signUpData.user) {
+          throw new Error("Failed to create user");
+        }
 
-2. Click "Add user" → "Create new user"
-   - Email: ${data.email}
-   - Password: ${data.password}
-   - ✅ Check "Auto Confirm User"
+        // The trigger should create the profile, but let's verify
+        // Wait a moment for the trigger to execute
+        await new Promise(resolve => setTimeout(resolve, 1500));
 
-3. Copy the User ID
+        // Check if profile exists
+        const { data: existingProfile, error: checkError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("user_id", signUpData.user.id)
+          .maybeSingle();
 
-4. Go to SQL Editor: https://supabase.com/dashboard/project/jubbpyoqcarnylbeslyz/sql/new
+        if (checkError) {
+          console.error("Error checking profile:", checkError);
+        }
 
-5. Run this SQL (replace USER_ID_HERE):
+        if (!existingProfile) {
+          // Profile doesn't exist - create it manually
+          const { error: insertError } = await supabase
+            .from("profiles")
+            .insert({
+              user_id: signUpData.user.id,
+              email: data.email,
+              full_name: data.full_name,
+              role: data.role,
+              department_id: data.department_id || null,
+              phone: data.phone || null,
+              onboarding_completed: false,
+            });
 
-INSERT INTO profiles (user_id, email, full_name, role, department_id, phone, onboarding_completed)
-VALUES (
-  'USER_ID_HERE',
-  '${data.email}',
-  '${data.full_name}',
-  '${data.role}',
-  ${data.department_id ? `'${data.department_id}'` : 'NULL'},
-  ${data.phone ? `'${data.phone}'` : 'NULL'},
-  false
-);
+          if (insertError) {
+            console.error("Profile insert error:", insertError);
+            throw new Error(`Failed to create profile: ${insertError.message}`);
+          }
+        } else {
+          // Profile exists - update it and ensure onboarding is false
+          const { error: updateError } = await supabase
+            .from("profiles")
+            .update({
+              full_name: data.full_name,
+              role: data.role,
+              department_id: data.department_id || null,
+              phone: data.phone || null,
+              onboarding_completed: false,
+            })
+            .eq("user_id", signUpData.user.id);
 
-===========================================
-        `);
-        
-        throw new Error("Edge Function not deployed. Check console for manual instructions.");
+          if (updateError) {
+            console.warn("Profile update warning:", updateError);
+          }
+        }
+
+        // Add to user_roles
+        const { error: roleError } = await supabase.from("user_roles").upsert({
+          user_id: signUpData.user.id,
+          role: data.role,
+        }, { onConflict: "user_id,role" });
+
+        if (roleError) {
+          console.warn("User role error:", roleError);
+        }
+
+        // Get the profile id for role-specific records
+        const { data: profileData, error: profileFetchError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("user_id", signUpData.user.id)
+          .single();
+
+        if (profileFetchError) {
+          console.error("Error fetching profile:", profileFetchError);
+        }
+
+        if (profileData) {
+          // Create role-specific records
+          if (data.role === "student") {
+            const { error: studentError } = await supabase.from("students").upsert({
+              profile_id: profileData.id,
+              student_id: `STU${Date.now().toString().slice(-8)}`,
+            }, { onConflict: "profile_id" });
+            
+            if (studentError) {
+              console.warn("Student record error:", studentError);
+            }
+          } else if (data.role === "company") {
+            const { error: companyError } = await supabase.from("companies").upsert({
+              profile_id: profileData.id,
+              company_name: data.full_name,
+              verified: false,
+            }, { onConflict: "profile_id" });
+            
+            if (companyError) {
+              console.warn("Company record error:", companyError);
+            }
+          } else if (data.role === "advisor" || data.role === "coordinator") {
+            const { error: facultyError } = await supabase.from("faculty").upsert({
+              profile_id: profileData.id,
+              title: data.role === "coordinator" ? "Department Coordinator" : "Academic Advisor",
+            }, { onConflict: "profile_id" });
+            
+            if (facultyError) {
+              console.warn("Faculty record error:", facultyError);
+            }
+          }
+        }
+
+        toast({
+          title: "User created successfully",
+          description: `${data.full_name} has been added as ${data.role}. They will need to verify their email.`,
+        });
+
+        return { success: true, user: signUpData.user };
       }
 
       if (result?.error) {
@@ -84,7 +174,7 @@ VALUES (
     } catch (error: any) {
       toast({
         title: "Failed to create user",
-        description: error.message || "An error occurred",
+        description: error.message || "An error occurred. Please try again.",
         variant: "destructive",
       });
       return { success: false, error: error.message };

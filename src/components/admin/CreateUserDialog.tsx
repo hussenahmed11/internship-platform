@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/form";
 import { UserPlus, Loader2 } from "lucide-react";
 import { AppRole } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 const createUserSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -54,6 +55,7 @@ export function CreateUserDialog() {
   const [open, setOpen] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
   const { createUser, loading } = useCreateUser();
+  const queryClient = useQueryClient();
 
   const form = useForm<CreateUserFormData>({
     resolver: zodResolver(createUserSchema),
@@ -91,6 +93,21 @@ export function CreateUserDialog() {
     if (result.success) {
       form.reset();
       setOpen(false);
+      
+      // Wait a moment for database to sync
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Refresh all user-related queries
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["users"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-dashboard-stats"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-pending-actions"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-role-distribution"] }),
+        queryClient.invalidateQueries({ queryKey: ["user-sync-status"] }),
+      ]);
+      
+      // Force refetch
+      await queryClient.refetchQueries({ queryKey: ["users"] });
     }
   };
 

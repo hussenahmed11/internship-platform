@@ -82,14 +82,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
 
         // Defer profile fetching with setTimeout to avoid deadlock
         if (session?.user) {
-          setTimeout(() => {
-            fetchProfile(session.user.id).then(setProfile);
+          setTimeout(async () => {
+            const profileData = await fetchProfile(session.user.id);
+            setProfile(profileData);
           }, 0);
         } else {
           setProfile(null);
