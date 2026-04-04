@@ -213,7 +213,13 @@ export default function Users() {
             const weekAgo = new Date();
             weekAgo.setDate(weekAgo.getDate() - 7);
             return joinDate > weekAgo;
-        }).length
+        }).length,
+        onboardingByRole: users.reduce((acc, user) => {
+            if (!acc[user.role]) acc[user.role] = { total: 0, completed: 0 };
+            acc[user.role].total += 1;
+            if (user.onboarding_completed) acc[user.role].completed += 1;
+            return acc;
+        }, {} as Record<string, { total: number, completed: number }>)
     } : null;
 
     return (
@@ -296,6 +302,45 @@ export default function Users() {
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* Profile Completion by Role */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-lg">Profile Completion by Role</CardTitle>
+                        <CardDescription>Breakdown of onboarding completion across user types</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex flex-col gap-4">
+                            {userStats && Object.entries(userStats.onboardingByRole).map(([role, stats]) => {
+                                const percentage = stats.total > 0 ? Math.round((stats.completed / (stats.total || 1)) * 100) : 0;
+                                return (
+                                    <div key={role} className="flex items-center gap-4">
+                                        <div className="w-24 font-medium capitalize text-sm">{role}</div>
+                                        <div className="flex-1">
+                                            <div className="w-full bg-secondary rounded-full h-2">
+                                                <div 
+                                                    className="bg-primary h-2 rounded-full transition-all" 
+                                                    style={{ width: `${percentage}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="w-32 text-right text-sm text-muted-foreground flex justify-end gap-2">
+                                            <span>{stats.completed} / {stats.total}</span>
+                                            <span className="font-semibold text-foreground w-10">({percentage}%)</span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                            {isLoading && (
+                                <div className="space-y-3">
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-4 w-full" />
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
 
                 <Card>
                     <CardHeader>

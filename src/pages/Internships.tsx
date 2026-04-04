@@ -16,6 +16,7 @@ import { useState, useMemo } from "react";
 export default function Internships() {
   const { profile } = useAuth();
   const isAdmin = profile?.role === "admin";
+  const canManage = profile?.role === "admin" || profile?.role === "coordinator";
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -183,7 +184,7 @@ export default function Internships() {
                       {(post.companies as any)?.company_name}
                     </div>
                   </div>
-                  {isAdmin && (
+                  {canManage && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
