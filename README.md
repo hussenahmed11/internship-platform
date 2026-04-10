@@ -1,8 +1,8 @@
-# InternHub - Professional Internship Placement Ecosystem
-
-![InternHub Dashboard](https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=2070)
-
 InternHub is a premium, full-stack internship management platform designed to bridge the gap between universities, students, and the professional world. Built with a focus on data integrity, specialized roles, and a seamless user experience.
+
+### 🌐 [Live Demo](https://internship-platform-l2ghr47kv-hussen-ahmeds-projects.vercel.app)
+
+---
 
 ## ✨ Core Feature Highlights
 
@@ -88,6 +88,13 @@ npm run dev
 
 ## 📄 License
 InternHub is released under the MIT License.
+
+---
+
+## 📈 Recent Improvements
+- **Build Stability**: Sanitized project files to ensure 100% deployment success rate on Vercel.
+- **Advisor Verification**: Implemented a secure student audit module for advisors.
+- **Theme Engine**: Integrated a persistent dark/light mode for and enhanced user experience.
 
 ---
 *Built with ❤️ for Universities and Career Centers seeking excellence in placement management.*
