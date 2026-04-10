@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import React from "react";
 import App from "./App.tsx";
 import "./index.css";
+import { ThemeProvider } from "@/components/theme-provider";
 
 // Simple Error Boundary to catch crash errors
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null }> {
@@ -53,7 +54,9 @@ if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KE
 } else {
     createRoot(rootElement).render(
       <ErrorBoundary>
-        <App />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <App />
+        </ThemeProvider>
       </ErrorBoundary>
     );
 }

@@ -86,6 +86,39 @@ export default function Schedule() {
         if (error) throw error;
         return data;
       }
+
+      if (profile?.role === "advisor") {
+        const { data: faculty } = await supabase
+          .from("faculty")
+          .select("id")
+          .eq("profile_id", profile.id)
+          .maybeSingle();
+        if (!faculty) return [];
+        
+        const { data: advisees } = await supabase
+          .from("students")
+          .select("id")
+          .eq("advisor_id", faculty.id);
+        if (!advisees?.length) return [];
+        
+        const { data, error } = await supabase
+          .from("applications")
+          .select(`
+            id, status, interview_date, notes,
+            internships:internship_id (
+              title, deadline, start_date, location,
+              companies:company_id (company_name)
+            ),
+            students:student_id (
+              profiles:profile_id (full_name)
+            )
+          `)
+          .in("student_id", advisees.map(s => s.id))
+          .not("interview_date", "is", null);
+        if (error) throw error;
+        return data;
+      }
+      
       return [];
     },
     enabled: !!profile?.id && (profile?.role !== "student" || !!student?.id),

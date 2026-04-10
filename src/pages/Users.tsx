@@ -50,7 +50,8 @@ export default function Users() {
     const [editFormData, setEditFormData] = useState({
         full_name: "",
         role: "",
-        department_id: ""
+        department_id: "",
+        advisor_id: ""
     });
 
     const queryClient = useQueryClient();
@@ -89,24 +90,104 @@ export default function Users() {
         }
     });
 
+    // Fetch faculty for advisor assignment
+    const { data: facultyMembers } = useQuery({
+        queryKey: ["faculty-members"],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from("faculty")
+                .select(`
+                    id,
+                    profiles (
+                        full_name
+                    )
+                `);
+            if (error) throw error;
+            return data.map(f => ({
+                id: f.id,
+                full_name: (f.profiles as any)?.full_name || "Unknown Faculty"
+            }));
+        }
+    });
+
 
     const updateUserMutation = useMutation({
-        mutationFn: async ({ id, updates }: {
+        mutationFn: async ({ id, updates, advisorId }: {
             id: string;
             updates: {
                 full_name?: string | null;
                 role?: "student" | "company" | "advisor" | "coordinator" | "admin";
                 department_id?: string | null;
-            }
+            };
+            advisorId?: string | null;
         }) => {
-            const { data, error } = await supabase
+            // Update profile
+            const { data: profile, error: profileError } = await supabase
                 .from("profiles")
                 .update(updates)
                 .eq("id", id)
                 .select()
                 .single();
-            if (error) throw error;
-            return data;
+            if (profileError) throw profileError;
+
+            // Handle role-specific record synchronization
+            if (updates.role === "student" || profile.role === "student") {
+                const { data: existingStudent } = await supabase
+                    .from("students")
+                    .select("id")
+                    .eq("profile_id", id)
+                    .maybeSingle();
+
+                if (existingStudent) {
+                    await supabase
+                        .from("students")
+                        .update({ advisor_id: advisorId || null })
+                        .eq("profile_id", id);
+                } else {
+                    await supabase
+                        .from("students")
+                        .insert({
+                            profile_id: id,
+                            advisor_id: advisorId || null,
+                            student_id: `STU${Date.now().toString().slice(-8)}`
+                        });
+                }
+            } else if (["advisor", "coordinator"].includes(updates.role || profile.role)) {
+                const { data: existingFaculty } = await supabase
+                    .from("faculty")
+                    .select("id")
+                    .eq("profile_id", id)
+                    .maybeSingle();
+
+                if (!existingFaculty) {
+                    await supabase
+                        .from("faculty")
+                        .insert({
+                            profile_id: id,
+                            title: updates.role === "coordinator" || profile.role === "coordinator" 
+                                ? "Department Coordinator" 
+                                : "Academic Advisor"
+                        });
+                }
+            } else if ((updates.role === "company" || profile.role === "company")) {
+                const { data: existingCompany } = await supabase
+                    .from("companies")
+                    .select("id")
+                    .eq("profile_id", id)
+                    .maybeSingle();
+
+                if (!existingCompany) {
+                    await supabase
+                        .from("companies")
+                        .insert({
+                            profile_id: id,
+                            company_name: updates.full_name || profile.full_name || "New Company",
+                            verified: false
+                        });
+                }
+            }
+
+            return profile;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -161,12 +242,24 @@ export default function Users() {
         );
     };
 
-    const handleEditUser = (user: User) => {
+    const handleEditUser = async (user: User) => {
         setEditingUser(user);
+        
+        let advisorId = "";
+        if (user.role === "student") {
+            const { data: studentData } = await supabase
+                .from("students")
+                .select("advisor_id")
+                .eq("profile_id", user.id)
+                .maybeSingle();
+            advisorId = studentData?.advisor_id || "none";
+        }
+
         setEditFormData({
             full_name: user.full_name || "",
             role: user.role,
-            department_id: user.department_id || ""
+            department_id: user.department_id || "",
+            advisor_id: advisorId
         });
         setIsEditDialogOpen(true);
     };
@@ -180,7 +273,8 @@ export default function Users() {
                 full_name: editFormData.full_name || null,
                 role: editFormData.role as "student" | "company" | "advisor" | "coordinator" | "admin",
                 department_id: editFormData.department_id || null
-            }
+            },
+            advisorId: editFormData.advisor_id === "none" ? null : editFormData.advisor_id
         });
     };
 
@@ -582,20 +676,42 @@ export default function Users() {
                             </div>
                             <div>
                                 <Label htmlFor="edit-department">Department</Label>
-                                    <Select value={editFormData.department_id || "none"} onValueChange={(value) => setEditFormData({ ...editFormData, department_id: value === "none" ? "" : value })}>
+                                <Select value={editFormData.department_id || "none"} onValueChange={(value) => setEditFormData({ ...editFormData, department_id: value === "none" ? "" : value })}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select department" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">No Department</SelectItem>
+                                        {departments?.map((dept) => (
+                                            <SelectItem key={dept.id} value={dept.id}>
+                                                {dept.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            
+                            {editFormData.role === "student" && (
+                                <div>
+                                    <Label htmlFor="edit-advisor">Academic Advisor</Label>
+                                    <Select 
+                                        value={editFormData.advisor_id || "none"} 
+                                        onValueChange={(value) => setEditFormData({ ...editFormData, advisor_id: value })}
+                                    >
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select department" />
+                                            <SelectValue placeholder="Select advisor" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="none">No Department</SelectItem>
-                                            {departments?.map((dept) => (
-                                                <SelectItem key={dept.id} value={dept.id}>
-                                                    {dept.name}
+                                            <SelectItem value="none">No Advisor</SelectItem>
+                                            {facultyMembers?.map((faculty) => (
+                                                <SelectItem key={faculty.id} value={faculty.id}>
+                                                    {faculty.full_name}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
-                            </div>
+                                </div>
+                            )}
                         </div>
                         <DialogFooter>
                             <Button

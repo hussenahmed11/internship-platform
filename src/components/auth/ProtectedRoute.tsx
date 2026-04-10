@@ -54,7 +54,7 @@ export function ProtectedRoute({
     }
   }, [user, profile, loading, allowedRoles, navigate, location, requireAuth]);
 
-  if (loading) {
+  if (loading || (requireAuth && user && !profile)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">

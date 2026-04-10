@@ -17,6 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { ModeToggle } from "@/components/mode-toggle";
 import { Bell, LogOut, Settings, User, Check, CheckCheck, Trash2, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -92,6 +93,8 @@ export function DashboardHeader() {
               {roleLabels[profile.role]}
             </span>
           )}
+
+          <ModeToggle />
 
           {/* Notifications Popover */}
           <Popover>

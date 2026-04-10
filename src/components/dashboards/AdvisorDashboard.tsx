@@ -27,7 +27,7 @@ export function AdvisorDashboard() {
   const navigate = useNavigate();
 
   // Get faculty record for this advisor
-  const { data: faculty } = useQuery({
+  const { data: faculty, isLoading: loadingFaculty, error: facultyError } = useQuery({
     queryKey: ["advisor-faculty", profile?.id],
     enabled: !!profile?.id,
     queryFn: async () => {
@@ -36,7 +36,11 @@ export function AdvisorDashboard() {
         .select("*")
         .eq("profile_id", profile!.id)
         .maybeSingle();
-      if (error) throw error;
+      
+      if (error) {
+        console.error("Error fetching faculty record:", error);
+        throw error;
+      }
       return data;
     },
   });
@@ -154,6 +158,25 @@ export function AdvisorDashboard() {
           View Schedule
         </Button>
       </div>
+
+      {!loadingFaculty && !faculty && (
+        <Card className="bg-amber-50 border-amber-200 dark:bg-amber-900/10 dark:border-amber-900/30">
+          <CardContent className="p-4 flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                Staff Profile Incomplete
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-400">
+                You are logged in as an Advisor, but your academic profile is missing. Some data may not appear correctly.
+              </p>
+            </div>
+            <Button size="sm" variant="outline" className="border-amber-200 hover:bg-amber-100" onClick={() => navigate("/onboarding")}>
+              Complete Profile
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

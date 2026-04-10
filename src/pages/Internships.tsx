@@ -98,6 +98,62 @@ export default function Internships() {
     },
   });
 
+  const isStudent = profile?.role === "student";
+
+  // Fetch student record if they are a student
+  const { data: student } = useQuery({
+    queryKey: ["my-student", profile?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("students")
+        .select("*")
+        .eq("profile_id", profile!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profile?.id && isStudent,
+  });
+
+  // Fetch my applications to check status
+  const { data: myApplications } = useQuery({
+    queryKey: ["my-applications", student?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("applications")
+        .select("internship_id")
+        .eq("student_id", student!.id);
+      if (error) throw error;
+      return data.map(a => a.internship_id);
+    },
+    enabled: !!student?.id && isStudent,
+  });
+
+  // Apply mutation
+  const [applyingId, setApplyingId] = useState<string | null>(null);
+  const applyMutation = useMutation({
+    mutationFn: async (internshipId: string) => {
+      if (!student?.id) throw new Error("Student profile not found");
+      const { error } = await supabase
+        .from("applications")
+        .insert({
+          student_id: student.id,
+          internship_id: internshipId,
+          status: "applied"
+        });
+      if (error) throw error;
+    },
+    onMutate: (id) => setApplyingId(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-applications"] });
+      toast.success("Successfully applied for internship!");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to apply");
+    },
+    onSettled: () => setApplyingId(null),
+  });
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active": return <Badge className="bg-company text-white">Active</Badge>;
@@ -268,6 +324,26 @@ export default function Internships() {
                     </Badge>
                   )}
                 </div>
+
+                {isStudent && (
+                  <div className="pt-4 border-t mt-4">
+                    <Button 
+                      className="w-full" 
+                      disabled={myApplications?.includes(post.id) || post.status !== "active" || applyMutation.isPending}
+                      onClick={() => applyMutation.mutate(post.id)}
+                    >
+                      {myApplications?.includes(post.id) ? (
+                        "Applied"
+                      ) : post.status !== "active" ? (
+                        "Not Accepting Applications"
+                      ) : applyingId === post.id ? (
+                        "Applying..."
+                      ) : (
+                        "Apply Now"
+                      )}
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}

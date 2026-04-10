@@ -1,129 +1,93 @@
-# Internship Management System
+# InternHub - Professional Internship Placement Ecosystem
 
-A comprehensive platform for managing university internship programs, built with React, TypeScript, and Supabase.
+![InternHub Dashboard](https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=2070)
 
-## 🚀 Quick Start
+InternHub is a premium, full-stack internship management platform designed to bridge the gap between universities, students, and the professional world. Built with a focus on data integrity, specialized roles, and a seamless user experience.
 
-### 1. Install Dependencies
+## ✨ Core Feature Highlights
+
+### 🛡️ Data Integrity & Verification
+- **Student Verification Pipeline**: Unique to InternHub, Advisors can audit student profile data (Student ID, Major) before granting application permissions.
+- **Smart Onboarding**: Dynamic role-based profile completion that ensures the right data is collected from the right users.
+
+### 🌓 Premium User Experience
+- **Instant Dark Mode**: A system-integrated theme engine with persistence and smooth transitions.
+- **Modern UI Kit**: Built with Shadcn UI and Tailwind CSS for a professional, glassmorphic aesthetic.
+- **Real-time Engine**: Powered by Supabase for instant messaging and application status updates.
+
+### 👥 Specialized User Roles
+| Role | Responsibility | Key Features |
+| :--- | :--- | :--- |
+| **Admin** | Platform Oversight | User Sync, Role Management, System Audits |
+| **Coordinator** | Program Strategy | Department Analytics, High-level Placement Tracking |
+| **Advisor** | Data Guardianship | Student Verification, Advisee Management, Approvals |
+| **Employer** | Talent Acquisition | Internship Posting, Candidate Review, Interview Scheduling |
+| **Student** | Career Growth | Profile Building, Internship Discovery, Application Tracking |
+
+---
+
+## 🏗️ Architecture Overview
+
+```mermaid
+graph TD
+    A[Vite/React Frontend] --> B[TanStack Query]
+    B --> C[Supabase Auth]
+    B --> D[PostgreSQL Database]
+    D --> E[Real-time Messages]
+    A --> F[Shadcn UI Theme Engine]
+    Role[Roles: Admin, Advisor, Student...] --> A
+```
+
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisite
+- Node.js 18+
+- Supabase Account
+
+### 2. Initial Setup
 ```bash
+# Install dependencies
 npm install
+
+# Setup Environment
+# Create .env and add your variables:
+# VITE_SUPABASE_URL=your_project_url
+# VITE_SUPABASE_ANON_KEY=your_anon_key
 ```
 
-### 2. Configure Environment
-Create a `.env` file (use `.env.example` as template):
-```env
-VITE_SUPABASE_URL=https://jubbpyoqcarnylbeslyz.supabase.co
-VITE_SUPABASE_ANON_KEY=your_anon_key_from_supabase_dashboard
-```
-
-Get your anon key from: [Supabase API Settings](https://supabase.com/dashboard/project/jubbpyoqcarnylbeslyz/settings/api)
-
-### 3. Set Up Database
+### 3. Database Sync
 ```bash
-# Apply all migrations
+# Use the Supabase CLI to push migrations
 supabase db push
 ```
 
-See [docs/SUPABASE_SETUP.md](./docs/SUPABASE_SETUP.md) for manual setup instructions.
-
-### 4. Create Admin User
-See [docs/MANUAL_USER_CREATION_GUIDE.md](./docs/MANUAL_USER_CREATION_GUIDE.md) for step-by-step instructions.
-
-### 5. Run Development Server
+### 4. Direct Launch
 ```bash
 npm run dev
 ```
 
-## 📚 Documentation
+---
 
-- **[Quick Reference](./docs/QUICK_REFERENCE.md)** - Common commands and quick fixes
-- **[Admin Guide](./docs/ADMIN_GUIDE.md)** - User sync and profile completion
-- **[Supabase Setup](./docs/SUPABASE_SETUP.md)** - Database configuration
-- **[User Creation](./docs/MANUAL_USER_CREATION_GUIDE.md)** - Creating users manually
+## 🛠️ Technology Stack
 
-## 🔧 Technology Stack
+- **Frontend Core**: React 18, TypeScript, Vite
+- **UI Framework**: Tailwind CSS, Radix UI (Shadcn)
+- **Data & Auth**: Supabase (PostgreSQL, Auth, Real-time)
+- **State Orchestration**: TanStack Query (React Query)
+- **Utilities**: Lucide Icons, Date-fns, Sonner (Toasts)
 
-- **Frontend**: React 18 + TypeScript
-- **UI**: Shadcn UI + Tailwind CSS
-- **State**: TanStack Query
-- **Routing**: React Router v6
-- **Backend**: Supabase (PostgreSQL, Auth, Storage)
-- **Build**: Vite
+---
 
-## ✨ Features
+## 🧪 Development & Maintenance
 
-- Role-based access control (Admin, Student, Employer, Advisor, Coordinator)
-- Internship posting and application management
-- Multi-level approval workflow
-- Document management
-- Real-time notifications
-- Messaging system
-- Analytics dashboard
-- Audit logging
-- User sync system
-- Profile completion flow
-
-## 👥 User Roles
-
-| Role | Access |
-|------|--------|
-| **Admin** | Full system access, user management |
-| **Student** | Apply for internships, track applications |
-| **Employer** | Post internships, review applications |
-| **Advisor** | Review student applications, provide guidance |
-| **Coordinator** | Oversee program, final approvals |
-
-## 🛠️ Development
-
-```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run preview      # Preview production build
-npm run lint         # Run ESLint
-```
-
-## 🚨 Common Issues
-
-### Users Not Showing in Dashboard
-If you have users in Supabase Auth but they're not showing in your application:
-
-1. Apply the migration: `supabase db push`
-2. Log in as admin
-3. Click "Sync Users" button in User Management or Admin Dashboard
-4. Refresh the page
-
-See [docs/ADMIN_GUIDE.md](./docs/ADMIN_GUIDE.md) for detailed troubleshooting.
-
-### Can't Log In
-- Verify user exists in Supabase Auth
-- Check email is confirmed
-- Ensure profile record exists in database
-
-See [docs/QUICK_REFERENCE.md](./docs/QUICK_REFERENCE.md) for verification queries.
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-1. Push code to GitHub
-2. Import project in Vercel
-3. Add environment variables:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-4. Deploy
-
-### Netlify
-1. Push code to GitHub
-2. Import project in Netlify
-3. Build command: `npm run build`
-4. Publish directory: `dist`
-5. Add environment variables
-
-## 📞 Support
-
-- **Supabase Dashboard**: https://supabase.com/dashboard/project/jubbpyoqcarnylbeslyz
-- **Supabase Docs**: https://supabase.com/docs
-- **Project Docs**: See [docs/](./docs/) folder
+- **`npm run build`**: Create a production-optimized build.
+- **`npm run lint`**: Perform project-wide linting checks.
+- **`npm run preview`**: Test the production bundle locally.
 
 ## 📄 License
+InternHub is released under the MIT License.
 
-MIT
+---
+*Built with ❤️ for Universities and Career Centers seeking excellence in placement management.*

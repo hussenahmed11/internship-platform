@@ -29,6 +29,7 @@ import {
   BookOpen,
   BarChart3,
   CheckSquare,
+  UserCheck,
   FolderOpen,
   LogOut,
 } from "lucide-react";
@@ -61,6 +62,7 @@ const companyNavItems: NavItem[] = [
 const advisorNavItems: NavItem[] = [
   { title: "Dashboard", url: "/advisor/dashboard", icon: LayoutDashboard },
   { title: "My Advisees", url: "/advisees", icon: Users },
+  { title: "Verify Students", url: "/advisor/verification", icon: UserCheck },
   { title: "Approvals", url: "/advisor/approvals", icon: CheckSquare },
   { title: "Evaluations", url: "/evaluations", icon: BookOpen },
   { title: "Schedule", url: "/schedule", icon: Calendar },

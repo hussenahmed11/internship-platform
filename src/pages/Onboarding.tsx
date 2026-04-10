@@ -202,7 +202,7 @@ export default function Onboarding() {
       // Refresh profile to get updated onboarding_completed status
       await refreshProfile();
       
-      toast.success("Profile completed successfully!");
+      toast.success("Profile submitted! Your academic advisor will now verify your details.");
       
       // Navigate to appropriate dashboard
       const dashboardPath = getDashboardPath(profile.role);
