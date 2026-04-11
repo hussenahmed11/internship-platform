@@ -40,6 +40,7 @@ import { AdvisorDashboard } from "@/components/dashboards/AdvisorDashboard";
 import { CoordinatorDashboard } from "@/components/dashboards/CoordinatorDashboard";
 import { AdminDashboard } from "@/components/dashboards/AdminDashboard";
 import PlacementRecords from "./pages/PlacementRecords";
+import { ThemeSync } from "@/components/ThemeSync";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <ThemeSync />
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Index />} />

@@ -200,16 +200,12 @@ export default function Users() {
         }
     });
 
-    // Delete user mutation - uses edge function to properly delete auth user + profile
+    // Delete user mutation - uses the new database RPC function to properly delete auth user + profile
     const deleteUserMutation = useMutation({
         mutationFn: async (profileId: string) => {
-            const { data, error } = await supabase.functions.invoke("delete-user", {
-                body: { profile_id: profileId },
-            });
-
+            const { error } = await supabase.rpc("admin_delete_user", { target_profile_id: profileId });
             if (error) throw new Error(error.message);
-            if (data?.error) throw new Error(data.error);
-            return data;
+            return true;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["users"] });

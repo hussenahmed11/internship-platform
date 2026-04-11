@@ -33,51 +33,27 @@ export function SyncUsersButton() {
     setResult(null);
 
     try {
-      // First try the Edge Function
-      const { data, error } = await supabase.functions.invoke("sync-users");
-
-      if (error) {
-        // Fallback to RPC function if Edge Function is not deployed
-        console.warn("Edge function not available, trying RPC function...", error);
-        
-        const { data: rpcData, error: rpcError } = await supabase.rpc("sync_auth_users_to_profiles");
-        
-        if (rpcError) {
-          throw new Error(rpcError.message);
-        }
-        
-        const syncResult = rpcData;
-        setResult({
-          success: syncResult.success,
-          syncedCount: syncResult.syncedCount,
-          totalAuthUsers: 0,
-          totalProfiles: 0,
-          syncedUsers: [],
-          errors: [],
-          message: syncResult.message,
-        });
-        
-        if (syncResult.syncedCount > 0) {
-          toast.success(`Synced ${syncResult.syncedCount} users successfully`);
-          // Invalidate queries to refresh dashboard data
-          queryClient.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
-          queryClient.invalidateQueries({ queryKey: ["admin-pending-actions"] });
-          queryClient.invalidateQueries({ queryKey: ["admin-role-distribution"] });
-          queryClient.invalidateQueries({ queryKey: ["user-sync-status"] });
-          queryClient.invalidateQueries({ queryKey: ["users"] });
-        } else {
-          toast.info("All users are already synced");
-        }
-        
-        setShowDialog(true);
-        return;
+      const { data: rpcData, error: rpcError } = await supabase.rpc("admin_sync_missing_auth_users");
+      
+      if (rpcError) {
+        throw new Error(rpcError.message);
       }
-
-      const syncResult = data as SyncResult;
-      setResult(syncResult);
-
-      if (syncResult.syncedCount > 0) {
-        toast.success(`Synced ${syncResult.syncedCount} users successfully`);
+      
+      // The RPC returns just an integer count of how many users it synced
+      const syncedCount = rpcData || 0;
+      
+      setResult({
+        success: true,
+        syncedCount: syncedCount,
+        totalAuthUsers: 0,
+        totalProfiles: 0,
+        syncedUsers: [],
+        errors: [],
+        message: syncedCount > 0 ? `Successfully restored ${syncedCount} profiles.` : "No missing profiles found.",
+      });
+      
+      if (syncedCount > 0) {
+        toast.success(`Synced ${syncedCount} users successfully`);
         // Invalidate queries to refresh dashboard data
         queryClient.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
         queryClient.invalidateQueries({ queryKey: ["admin-pending-actions"] });
@@ -85,11 +61,7 @@ export function SyncUsersButton() {
         queryClient.invalidateQueries({ queryKey: ["user-sync-status"] });
         queryClient.invalidateQueries({ queryKey: ["users"] });
       } else {
-        toast.info("All users are already synced");
-      }
-
-      if (syncResult.errors.length > 0) {
-        toast.warning(`${syncResult.errors.length} errors occurred during sync`);
+        toast.info("All users are already perfectly synced!");
       }
 
       setShowDialog(true);

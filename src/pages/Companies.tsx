@@ -79,8 +79,11 @@ export default function Companies() {
       if (counts && counts.total > 0) {
         throw new Error("Cannot delete company with existing internships");
       }
-      const { error } = await supabase.from("companies").delete().eq("id", id);
+      const { error, data } = await supabase.from("companies").delete().eq("id", id).select();
       if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error("Cannot delete: Permission denied by database security rules or company not found.");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-companies"] });
@@ -108,6 +111,8 @@ export default function Companies() {
     verified: companies?.filter(c => c.verified).length || 0,
     unverified: companies?.filter(c => !c.verified).length || 0,
   };
+
+  const [companyToDelete, setCompanyToDelete] = useState<{id: string, name: string} | null>(null);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -252,26 +257,10 @@ export default function Companies() {
                                 Visit Website
                               </DropdownMenuItem>
                             )}
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete {company.company_name}?</AlertDialogTitle>
-                                  <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => deleteCompanyMutation.mutate(company.id)} className="bg-destructive text-destructive-foreground">
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                            <DropdownMenuItem className="text-destructive" onClick={() => setCompanyToDelete({id: company.id, name: company.company_name})}>
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -283,6 +272,24 @@ export default function Companies() {
           )}
         </CardContent>
       </Card>
+      
+      <AlertDialog open={!!companyToDelete} onOpenChange={(open) => !open && setCompanyToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {companyToDelete?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (companyToDelete) deleteCompanyMutation.mutate(companyToDelete.id);
+              setCompanyToDelete(null);
+            }} className="bg-destructive text-destructive-foreground">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { 
-  Users, CheckSquare, Calendar, BookOpen, ChevronRight, Clock, 
+  Users, UserPlus, CheckSquare, Calendar, BookOpen, ChevronRight, Clock, 
   AlertCircle, Briefcase, GraduationCap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -26,57 +26,69 @@ export function AdvisorDashboard() {
   const { profile } = useAuth();
   const navigate = useNavigate();
 
+  const fetchWithTimeout = async (queryPromise: Promise<any>, timeoutMs: number = 8000) => {
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Request timed out. Please check your connection.")), timeoutMs)
+    );
+    return Promise.race([queryPromise, timeoutPromise]);
+  };
+
   // Get faculty record for this advisor
   const { data: faculty, isLoading: loadingFaculty, error: facultyError } = useQuery({
     queryKey: ["advisor-faculty", profile?.id],
     enabled: !!profile?.id,
+    retry: 1,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("faculty")
-        .select("*")
-        .eq("profile_id", profile!.id)
-        .maybeSingle();
-      
-      if (error) {
-        console.error("Error fetching faculty record:", error);
-        throw error;
-      }
-      return data;
+      return fetchWithTimeout(
+        supabase
+          .from("faculty")
+          .select("*")
+          .eq("profile_id", profile!.id)
+          .maybeSingle()
+          .then(({ data, error }) => {
+            if (error) throw error;
+            return data;
+          })
+      );
     },
   });
 
   // Get advisees (students assigned to this advisor)
-  const { data: advisees, isLoading: loadingAdvisees } = useQuery({
+  const { data: advisees, isLoading: loadingAdvisees, error: adviseeError } = useQuery({
     queryKey: ["advisor-advisees", faculty?.id],
     enabled: !!faculty?.id,
+    staleTime: 30000,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("students")
-        .select(`
-          *,
-          profiles:profile_id (full_name, email, avatar_url)
-        `)
-        .eq("advisor_id", faculty!.id);
-      if (error) throw error;
-      return data;
+      return fetchWithTimeout(
+        supabase
+          .from("students")
+          .select(`*, profiles:profile_id (full_name, email, avatar_url)`)
+          .eq("advisor_id", faculty!.id)
+          .then(({ data, error }) => {
+            if (error) throw error;
+            return data;
+          })
+      );
     },
   });
 
   // Get all applications for advisees
   const adviseeIds = advisees?.map(a => a.id) ?? [];
-  const { data: adviseeApps, isLoading: loadingApps } = useQuery({
+  const { data: adviseeApps, isLoading: loadingApps, error: appsError } = useQuery({
     queryKey: ["advisor-advisee-apps", adviseeIds],
     enabled: adviseeIds.length > 0,
+    staleTime: 30000,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("applications")
-        .select(`
-          *,
-          internships:internship_id (title, companies:company_id (company_name))
-        `)
-        .in("student_id", adviseeIds);
-      if (error) throw error;
-      return data;
+      return fetchWithTimeout(
+        supabase
+          .from("applications")
+          .select(`*, internships:internship_id (title, companies:company_id (company_name))`)
+          .in("student_id", adviseeIds)
+          .then(({ data, error }) => {
+            if (error) throw error;
+            return data;
+          })
+      );
     },
   });
 
@@ -84,24 +96,29 @@ export function AdvisorDashboard() {
   const pendingApprovals = adviseeApps?.filter(a => a.advisor_approved === null) ?? [];
 
   // Get evaluations due
-  const { data: evaluations, isLoading: loadingEvals } = useQuery({
+  const { data: evaluations, isLoading: loadingEvals, error: evalError } = useQuery({
     queryKey: ["advisor-evaluations", profile?.id],
     enabled: !!profile?.id,
+    staleTime: 30000,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("evaluations")
-        .select(`
-          *,
-          applications:application_id (
-            student_id,
-            internships:internship_id (title, companies:company_id (company_name)),
-            students:student_id (profiles:profile_id (full_name))
-          )
-        `)
-        .eq("evaluator_id", profile!.id)
-        .is("rating", null);
-      if (error) throw error;
-      return data;
+      return fetchWithTimeout(
+        supabase
+          .from("evaluations")
+          .select(`
+            *,
+            applications:application_id (
+              student_id,
+              internships:internship_id (title),
+              students:student_id (profiles:profile_id (full_name))
+            )
+          `)
+          .eq("evaluator_id", profile!.id)
+          .is("rating", null)
+          .then(({ data, error }) => {
+            if (error) throw error;
+            return data;
+          })
+      );
     },
   });
 
@@ -137,7 +154,10 @@ export function AdvisorDashboard() {
     return null;
   };
 
-  const isLoading = loadingAdvisees || loadingApps;
+  const isSummaryLoading = loadingFaculty;
+  const isDataLoading = loadingAdvisees || loadingApps || loadingEvals;
+  const hasError = facultyError || adviseeError || appsError || evalError;
+  const errorMsg = (facultyError || adviseeError || appsError || evalError)?.message;
 
   const stats = [
     { label: "Total Advisees", value: advisees?.length ?? 0, change: `${advisees?.filter(a => getAdviseeStatus(a.id) === "searching").length ?? 0} need attention`, icon: Users, color: "text-advisor" },
@@ -145,6 +165,20 @@ export function AdvisorDashboard() {
     { label: "Evaluations Due", value: evaluations?.length ?? 0, change: "Incomplete", icon: BookOpen, color: "text-primary" },
     { label: "Upcoming Interviews", value: upcomingInterviews.length, change: "For your advisees", icon: Calendar, color: "text-blue-500" },
   ];
+
+  if (hasError) {
+    return (
+      <div className="p-8 text-center max-w-2xl mx-auto">
+        <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-4" />
+        <h2 className="text-xl font-bold">Error Loading Dashboard</h2>
+        <p className="text-muted-foreground mt-2">There was an issue fetching your data. This might be due to database permissions or missing records.</p>
+        <div className="mt-4 p-4 bg-muted rounded-lg text-left text-xs font-mono overflow-auto max-h-32">
+          {errorMsg || "Unknown database error"}
+        </div>
+        <Button className="mt-6" onClick={() => window.location.reload()}>Retry Connection</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -189,7 +223,7 @@ export function AdvisorDashboard() {
                 <Icon className={cn("h-5 w-5", stat.color)} />
               </CardHeader>
               <CardContent>
-                {isLoading ? <Skeleton className="h-8 w-16" /> : (
+                {isSummaryLoading ? <Skeleton className="h-8 w-16" /> : (
                   <>
                     <div className="text-3xl font-bold">{stat.value}</div>
                     <p className="text-xs text-muted-foreground mt-1">{stat.change}</p>
@@ -217,7 +251,13 @@ export function AdvisorDashboard() {
             {loadingAdvisees ? (
               <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
             ) : !advisees?.length ? (
-              <p className="text-center py-8 text-muted-foreground">No advisees assigned yet</p>
+              <div className="text-center py-12">
+                <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4 opacity-50" />
+                <p className="text-muted-foreground mb-4">No advisees assigned to you yet.</p>
+                <Button variant="outline" onClick={() => navigate("/advisees")}>
+                  <UserPlus className="mr-2 h-4 w-4" /> Discover Students
+                </Button>
+              </div>
             ) : (
               <div className="space-y-4">
                 {advisees.slice(0, 5).map((advisee) => {
@@ -288,7 +328,7 @@ export function AdvisorDashboard() {
                         </div>
                         <AlertCircle className="h-4 w-4 text-amber-500" />
                       </div>
-                      <Button size="sm" variant="outline" className="w-full mt-2" onClick={() => navigate("/approvals")}>
+                      <Button size="sm" variant="outline" className="w-full mt-2" onClick={() => navigate("/advisor/approvals")}>
                         Review
                       </Button>
                     </div>

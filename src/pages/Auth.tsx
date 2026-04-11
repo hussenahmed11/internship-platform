@@ -2,7 +2,8 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { useAuth } from "@/contexts/AuthContext";
-import { GraduationCap, Building2, Briefcase, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 export default function Auth() {
   const { user, profile, loading } = useAuth();
@@ -27,62 +28,19 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Panel - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-hero relative overflow-hidden">
-        {/* Decorative Elements */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-30" />
-        
-        {/* Floating Icons */}
-        <div className="absolute top-20 left-20 animate-pulse-subtle">
-          <div className="glass-dark p-4 rounded-2xl">
-            <GraduationCap className="h-8 w-8 text-white" />
-          </div>
-        </div>
-        <div className="absolute top-40 right-32 animate-pulse-subtle" style={{ animationDelay: "0.5s" }}>
-          <div className="glass-dark p-4 rounded-2xl">
-            <Building2 className="h-8 w-8 text-white" />
-          </div>
-        </div>
-        <div className="absolute bottom-40 left-32 animate-pulse-subtle" style={{ animationDelay: "1s" }}>
-          <div className="glass-dark p-4 rounded-2xl">
-            <Briefcase className="h-8 w-8 text-white" />
-          </div>
-        </div>
-        <div className="absolute bottom-20 right-20 animate-pulse-subtle" style={{ animationDelay: "1.5s" }}>
-          <div className="glass-dark p-4 rounded-2xl">
-            <Users className="h-8 w-8 text-white" />
-          </div>
-        </div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background relative px-4">
+      {/* Back to Home Button */}
+      <Button
+        variant="ghost"
+        className="absolute top-8 left-8 text-muted-foreground hover:text-foreground group"
+        onClick={() => navigate("/")}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
+        Back to Home
+      </Button>
 
-        {/* Main Content */}
-        <div className="relative z-10 flex flex-col justify-center px-16">
-          <div className="space-y-6">
-            
-            <h1 className="text-5xl font-bold text-white leading-tight">
-              Internship
-              <br />
-              Placement
-              <br />
-              <span className="text-white/80">Management</span>
-            </h1>
-            
-            <p className="text-lg text-white/70 max-w-md leading-relaxed">
-              Students sign in with Google. Staff accounts are created by administrators. One secure, institutional platform.
-            </p>
-
-          </div>
-        </div>
-
-        {/* Bottom Gradient */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/20 to-transparent" />
-      </div>
-
-      {/* Right Panel - Auth Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-background">
-        <div className="w-full max-w-lg animate-fade-in">
-          <AuthForm />
-        </div>
+      <div className="w-full max-w-lg animate-fade-in">
+        <AuthForm />
       </div>
     </div>
   );

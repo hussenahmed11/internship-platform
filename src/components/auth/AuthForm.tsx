@@ -104,7 +104,9 @@ export function AuthForm() {
       } else if (error.message.includes("account setup incomplete")) {
         toast.error("Your account setup is incomplete. Please contact your administrator.");
       } else if (error.message.includes("Failed to fetch user profile")) {
-        toast.error("Unable to load your profile. Please try again or contact support.");
+        toast.error(error.message);
+      } else if (error.message.includes("no profile record was found")) {
+        toast.error(error.message);
       } else {
         toast.error(error.message);
       }

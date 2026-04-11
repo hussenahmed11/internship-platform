@@ -16,6 +16,7 @@ interface Profile {
   department_id: string | null;
   onboarding_completed: boolean;
   company_status?: "pending" | "verified" | "rejected";
+  theme?: "light" | "dark" | "system";
 }
 
 interface AuthContextType {
@@ -30,7 +31,7 @@ interface AuthContextType {
   refreshProfile: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -190,14 +191,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .maybeSingle();
 
         if (profileError) {
-          console.error("Error fetching profile:", profileError);
-          return { error: new Error("Failed to fetch user profile. Please contact support.") };
+          console.error("Error fetching profile during sign-in:", profileError);
+          return { error: new Error(`Failed to fetch user profile: ${profileError.message} (${profileError.code})`) };
         }
 
         if (!profileData) {
           // Profile doesn't exist - sign out and return error
+          console.warn("No profile found for user:", data.user.id);
           await supabase.auth.signOut();
-          return { error: new Error("User account setup incomplete. Please contact your administrator.") };
+          return { error: new Error("User account exists but no profile record was found. Please contact an administrator.") };
         }
       }
 
